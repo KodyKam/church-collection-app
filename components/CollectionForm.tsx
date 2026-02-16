@@ -133,20 +133,29 @@ export default function CollectionForm() {
   const handleExportCollections = async () => {
     setLoading(true);
 
+    // const { data: collections, error } = await supabase
+    //   .from("collections")
+    //   .select("*, donations(*)")
+    //   .gte("date", exportStart)
+    //   .lte("date", exportEnd)
+    //   .order("date", { ascending: true });
+
+    // if (error) {
+    //   console.error(error);
+    //   setLoading(false);
+    //   return;
+    // }
+
     const { data: collections, error } = await supabase
-      .from("collections")
-      .select("*, donations(*)")
-      .gte("date", exportStart)
-      .lte("date", exportEnd)
-      .order("date", { ascending: true });
+  .from("collections")
+  .select("*, donations(*)");
 
-    if (error) {
-      console.error(error);
-      setLoading(false);
-      return;
-    }
+if (!collections) {
+  setLoading(false);
+  return;
+}
 
-    for (const collection of collections) {
+    for (const collection of collections as any[]) {
       const donationsList = collection.donations || [];
       const total = (donationsList as Donation[]).reduce(
   (sum, d) => sum + (Number(d.amount) || 0),
