@@ -148,7 +148,10 @@ export default function CollectionForm() {
 
     for (const collection of collections) {
       const donationsList = collection.donations || [];
-      const total = donationsList.reduce((sum: number, d: any) => sum + (Number(d.amount) || 0), 0);
+      const total = (donationsList as Donation[]).reduce(
+  (sum, d) => sum + (Number(d.amount) || 0),
+  0
+);
 
       const pdfBlob = await pdf(
         <CollectionPDF
