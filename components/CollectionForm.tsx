@@ -46,11 +46,14 @@ export default function CollectionForm() {
     setDonations([...donations, { donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" }]);
   };
 
-  const handleDonationChange = (index: number, field: keyof Donation, value: any) => {
-    const updated = [...donations];
-    updated[index][field] = field === "amount" ? Number(value) : value;
-    setDonations(updated);
-  };
+  const handleDonationChange = (index: number, field: keyof Donation, value: string | number) => {
+  const updated = [...donations];
+  updated[index] = {
+    ...updated[index],
+    [field]: field === "amount" ? Number(value) : value
+  } as Donation;
+  setDonations(updated);
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
