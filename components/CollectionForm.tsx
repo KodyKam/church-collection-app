@@ -348,9 +348,13 @@ const capturePhoto = async () => {
 
       <div className="overlay" />
 
-      <button onClick={capturePhoto} className="btn-submit">
-        Capture
-      </button>
+      <button
+  type="button"
+  onClick={capturePhoto}
+  className="btn-submit"
+>
+  Capture
+</button>
     </div>
 
     <canvas ref={canvasRef} style={{ display: "none" }} />
