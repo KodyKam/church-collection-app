@@ -24,11 +24,7 @@ export default function CollectionForm() {
   const [depositSlip, setDepositSlip] = useState<File | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // add camera state for mobile users
-//   const [cameraReady, setCameraReady] = useState(false);
-//   const [showCamera, setShowCamera] = useState(false);
-//   const videoRef = useRef<HTMLVideoElement | null>(null);
-//   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -306,6 +302,7 @@ const compressImage = (file: File): Promise<File> => {
   accept="image/*"
   capture="environment"
   onChange={async (e) => {
+    setErrorMsg(null); // clear previous error
     try {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -313,12 +310,19 @@ const compressImage = (file: File): Promise<File> => {
       const compressed = await compressImage(file);
       setDepositSlip(compressed);
       toast.success("Deposit slip added");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to process deposit slip. Try again.");
+      setErrorMsg(err.message || "Unknown error occurred");
+      toast.error("Failed to process deposit slip");
     }
   }}
 />
+
+{errorMsg && (
+  <div style={{ color: "#dc2626", marginTop: "0.5rem", fontWeight: "bold" }}>
+    ⚠️ {errorMsg}
+  </div>
+)}
 
   {depositSlip && (
     <>
