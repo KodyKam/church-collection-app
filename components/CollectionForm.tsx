@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { pdf } from "@react-pdf/renderer";
 import { CollectionPDF } from "./CollectionPDF";
+import toast from "react-hot-toast";
 
 type Donation = {
   donor_name: string;
@@ -63,7 +64,7 @@ export default function CollectionForm() {
 
   try {
     if (!depositSlip) {
-      alert("Deposit slip is required!");
+      toast.error("Deposit slip is required!");
       return;
     }
 
@@ -125,7 +126,8 @@ export default function CollectionForm() {
     setDepositSlip(null);
   } catch (err) {
     console.error(err);
-    alert("Something went wrong. Please check console.");
+    toast.error("Something went wrong. Please check console.");
+    toast.success("Collection saved successfully!");
   } finally {
     setIsSubmitting(false);
   }
@@ -210,7 +212,23 @@ export default function CollectionForm() {
         <div className="form-row">
           <label>
             Deposit Slip (required):
-            <input type="file" accept="image/*,.pdf" onChange={(e) => setDepositSlip(e.target.files?.[0] || null)} required />
+            <input
+  type="file"
+  accept="image/*"
+  capture="environment"
+  onChange={(e) => {
+    if (e.target.files?.[0]) {
+      setDepositSlip(e.target.files[0]);
+    }
+  }}
+/>
+{depositSlip && (
+  <img
+    src={URL.createObjectURL(depositSlip)}
+    alt="Preview"
+    className="w-32 mt-2 rounded"
+  />
+)}
           </label>
         </div>
       </div>
@@ -232,21 +250,6 @@ export default function CollectionForm() {
       <div className="total-row">
         <strong>Total: </strong>${totalAmount.toFixed(2)}
       </div>
-
-      {/* ===========================================
-  NOTE: ⚠️
-  The "Submit Collection" button currently:
-    • Sends data to Supabase
-    • Generates a PDF
-    • Resets the form
-
-  Future improvements needed:
-    • Validate deposit slip presence more strictly
-    • Handle errors and display user-friendly messages
-    • Consider sending email directly with PDF & deposit slip
-    • Avoid bucket upload if file size limits are a concern
-    • Optionally add confirmation before clearing form
-=========================================== */}
 
       {/* Future work note */}
 <div style={{ backgroundColor: "#fff3cd", padding: "0.5rem", borderRadius: "6px", marginBottom: "1rem" }}>
