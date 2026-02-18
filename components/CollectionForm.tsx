@@ -25,10 +25,10 @@ export default function CollectionForm() {
   const [success, setSuccess] = useState(false);
 
   // add camera state for mobile users
-  const [cameraReady, setCameraReady] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+//   const [cameraReady, setCameraReady] = useState(false);
+//   const [showCamera, setShowCamera] = useState(false);
+//   const videoRef = useRef<HTMLVideoElement | null>(null);
+//   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -65,92 +65,52 @@ export default function CollectionForm() {
   setDonations(updated);
 };
 
-// Open camera for mobile users to capture deposit slip
-const openCamera = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
-    });
+// Compress image before upload to save bandwidth and storage space
+const compressImage = (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
 
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
+    reader.readAsDataURL(file);
 
-      videoRef.current.oncanplay = () => {
-        setCameraReady(true);
-        videoRef.current?.play();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const maxWidth = 1200; // limit resolution
+        const scale = maxWidth / img.width;
+        const width = img.width > maxWidth ? maxWidth : img.width;
+        const height = img.width > maxWidth ? img.height * scale : img.height;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return;
+
+            const compressedFile = new File(
+              [blob],
+              `deposit_${Date.now()}.jpg`,
+              { type: "image/jpeg" }
+            );
+
+            resolve(compressedFile);
+          },
+          "image/jpeg",
+          0.7 // compression quality (0.7 is good balance)
+        );
       };
-    }
-
-    setShowCamera(true);
-  } catch (err) {
-    toast.error("Camera access denied.");
-  }
+    };
+  });
 };
 
-// Capture and crop photo to 2.2:1 ratio for deposit slip
-const capturePhoto = () => {
-  if (!cameraReady) {
-    toast.error("Camera still loading...");
-    return;
-  }
-
-  const video = videoRef.current;
-  const canvas = canvasRef.current;
-
-  if (!video || !canvas) return;
-
-  const videoWidth = video.videoWidth;
-  const videoHeight = video.videoHeight;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  // 2.2:1 ratio
-  const cropWidth = videoWidth * 0.8;
-  const cropHeight = cropWidth / 2.2;
-
-  const startX = (videoWidth - cropWidth) / 2;
-  const startY = (videoHeight - cropHeight) / 2;
-
-  canvas.width = cropWidth;
-  canvas.height = cropHeight;
-
-  ctx.drawImage(
-    video,
-    startX,
-    startY,
-    cropWidth,
-    cropHeight,
-    0,
-    0,
-    cropWidth,
-    cropHeight
-  );
-
-  canvas.toBlob(
-    (blob) => {
-      if (!blob) {
-        toast.error("Capture failed.");
-        return;
-      }
-
-      const file = new File([blob], `deposit_${Date.now()}.jpg`, {
-        type: "image/jpeg"
-      });
-
-      setDepositSlip(file);
-      toast.success("Deposit slip captured");
-
-      const stream = video.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-
-      setShowCamera(false);
-      setCameraReady(false);
-    },
-    "image/jpeg",
-    0.7
-  );
-};
 
   const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
@@ -307,11 +267,20 @@ const capturePhoto = () => {
           <label>
   Deposit Slip (required):
 
-  {!depositSlip && ( //Camera UI for mobile users
-    <button type="button" onClick={openCamera} className="btn-add">
-      Take Photo
-    </button>
-  )}
+  <input
+    type="file"
+    accept="image/*"
+    capture="environment"
+    onChange={async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // Compress image before saving
+      const compressed = await compressImage(file);
+      setDepositSlip(compressed);
+      toast.success("Deposit slip added");
+    }}
+  />
 
   {depositSlip && (
     <>
@@ -322,7 +291,14 @@ const capturePhoto = () => {
       <button
         type="button"
         onClick={() => setDepositSlip(null)}
-        style={{ marginTop: "0.5rem", background: "#dc2626", color: "#fff" }}
+        style={{
+          marginTop: "0.5rem",
+          background: "#dc2626",
+          color: "#fff",
+          padding: "0.5rem",
+          borderRadius: "6px",
+          border: "none"
+        }}
       >
         Remove
       </button>
@@ -354,27 +330,6 @@ const capturePhoto = () => {
 <div style={{ backgroundColor: "#fff3cd", padding: "0.5rem", borderRadius: "6px", marginBottom: "1rem" }}>
   ⚠️ Submit & Export Collection buttons need improvements. See developer note in code.
 </div>
-
-{showCamera && (
-  <div className="camera-modal">
-    <div className="camera-wrapper">
-      <video ref={videoRef} />
-
-      <div className="overlay" />
-
-      <button
-  type="button"
-  onClick={capturePhoto}
-  className="btn-submit"
-  disabled={!cameraReady}
->
-  {cameraReady ? "Capture" : "Loading Camera..."}
-</button>
-    </div>
-
-    <canvas ref={canvasRef} style={{ display: "none" }} />
-  </div>
-)}
 
       <button type="submit" disabled={isSubmitting} className="btn-submit">
   {isSubmitting ? "Saving..." : "Submit Collection"}
