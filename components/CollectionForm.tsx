@@ -25,9 +25,10 @@ export default function CollectionForm() {
   const [success, setSuccess] = useState(false);
 
   // add camera state for mobile users
+  const [cameraReady, setCameraReady] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-const videoRef = useRef<HTMLVideoElement | null>(null);
-const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -74,8 +75,8 @@ const openCamera = async () => {
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
 
-      // WAIT for metadata before playing
-      videoRef.current.onloadedmetadata = () => {
+      videoRef.current.oncanplay = () => {
+        setCameraReady(true);
         videoRef.current?.play();
       };
     }
@@ -88,6 +89,11 @@ const openCamera = async () => {
 
 // Capture and crop photo to 2.2:1 ratio for deposit slip
 const capturePhoto = () => {
+  if (!cameraReady) {
+    toast.error("Camera still loading...");
+    return;
+  }
+
   const video = videoRef.current;
   const canvas = canvasRef.current;
 
@@ -95,11 +101,6 @@ const capturePhoto = () => {
 
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
-
-  if (!videoWidth || !videoHeight) {
-    toast.error("Camera not ready yet. Try again.");
-    return;
-  }
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -129,7 +130,7 @@ const capturePhoto = () => {
   canvas.toBlob(
     (blob) => {
       if (!blob) {
-        toast.error("Capture failed. Try again.");
+        toast.error("Capture failed.");
         return;
       }
 
@@ -140,11 +141,11 @@ const capturePhoto = () => {
       setDepositSlip(file);
       toast.success("Deposit slip captured");
 
-      // Stop camera
       const stream = video.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
 
       setShowCamera(false);
+      setCameraReady(false);
     },
     "image/jpeg",
     0.7
@@ -365,8 +366,9 @@ const capturePhoto = () => {
   type="button"
   onClick={capturePhoto}
   className="btn-submit"
+  disabled={!cameraReady}
 >
-  Capture
+  {cameraReady ? "Capture" : "Loading Camera..."}
 </button>
     </div>
 
