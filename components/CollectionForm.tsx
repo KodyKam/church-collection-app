@@ -1,3 +1,4 @@
+// components/CollectionForm.tsx
 "use client";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
@@ -5,6 +6,7 @@ import { pdf } from "@react-pdf/renderer";
 import { CollectionPDF } from "./CollectionPDF";
 import toast from "react-hot-toast";
 import { useRef } from "react";
+import path from "path/win32";
 
 type Donation = {
   donor_name: string;
@@ -131,15 +133,22 @@ const compressImage = (file: File): Promise<File> => {
       return;
     }
 
-    let depositUrl = "";
-
+    // 1️⃣ Upload the file
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("deposit-slips")
       .upload(`slips/${Date.now()}_${depositSlip.name}`, depositSlip);
 
     if (uploadError) throw uploadError;
-    depositUrl = uploadData?.path || "";
 
+    // 2️⃣ Get public URL (no error returned, just data.publicUrl)
+    const filePath = uploadData?.path || "";
+    const { data } = supabase.storage
+      .from("deposit-slips")
+      .getPublicUrl(filePath);
+
+    const depositUrl = data.publicUrl || "";
+
+    // 3️⃣ Insert collection row
     const { data: collection, error: collectionError } = await supabase
       .from("collections")
       .insert([
@@ -156,6 +165,7 @@ const compressImage = (file: File): Promise<File> => {
 
     if (collectionError) throw collectionError;
 
+    // 4️⃣ Insert donations
     const donationsToInsert = donations.map((d) => ({
       ...d,
       collection_id: collection.id,
@@ -167,6 +177,7 @@ const compressImage = (file: File): Promise<File> => {
 
     if (donationsError) throw donationsError;
 
+    // 5️⃣ Generate PDF
     const pdfBlob = await pdf(
       <CollectionPDF
         collection={collection}
@@ -182,27 +193,26 @@ const compressImage = (file: File): Promise<File> => {
     link.download = `collection_${collection.date}.pdf`;
     link.click();
 
+    // 6️⃣ Reset form
     setSuccess(true);
-    setDonations([
-      { donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" },
-    ]);
-    toast.success("Collection saved successfully!");
+    setDonations([{ donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" }]);
     setDepositSlip(null);
+    toast.success("Collection saved successfully!");
   } catch (err: any) {
-  console.error(err);
+    console.error(err);
+    const message =
+      err?.message ||
+      err?.error_description ||
+      JSON.stringify(err) ||
+      "Unknown error";
 
-  const message =
-    err?.message ||
-    err?.error_description ||
-    JSON.stringify(err) ||
-    "Unknown error";
-
-  toast.error(message);
-  setErrorMsg(message);
-} finally {
+    toast.error(message);
+    setErrorMsg(message);
+  } finally {
     setIsSubmitting(false);
   }
 };
+
 
   // Export collections for date range
   const handleExportCollections = async () => {
