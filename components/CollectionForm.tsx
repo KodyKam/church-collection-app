@@ -138,13 +138,14 @@ const compressImage = (file: File): Promise<File> => {
 
     if (uploadError) throw uploadError;
 
-    // 2️⃣ Get public URL (no error returned, just data.publicUrl)
-    const filePath = uploadData?.path || "";
-    const { data } = supabase.storage
+    // 2️⃣ Get public URL 
+    // const filePath = uploadData?.path || "";
+    const { data: publicUrlData } = supabase.storage
       .from("deposit-slips")
-      .getPublicUrl(filePath);
-
-    const depositUrl = data.publicUrl || "";
+      .getPublicUrl(uploadData.path);
+    
+      // make fully qualified URL for PDF embedding
+    const depositUrl = `https://vepoxyrnrsmcvshjfhuv.supabase.co${publicUrlData.publicUrl}`;
 
     // 3️⃣ Insert collection row
     const { data: collection, error: collectionError } = await supabase

@@ -9,12 +9,6 @@ const styles = StyleSheet.create({
 });
 
 export function CollectionPDF({ collection, donations, totalAmount, depositSlipUrl }: any) {
-  // Make sure URL starts with https://
-  const imageUrl =
-    depositSlipUrl && !depositSlipUrl.startsWith("http")
-      ? `https://vepoxyrnrsmcvshjfhuv.supabase.co${depositSlipUrl}`
-      : depositSlipUrl;
-
   return (
     <Document>
       <Page style={styles.page}>
@@ -38,10 +32,17 @@ export function CollectionPDF({ collection, donations, totalAmount, depositSlipU
 
         <Text style={{ marginTop: 10 }}>Total: ${totalAmount}</Text>
 
-        {imageUrl && (
+        {depositSlipUrl && (
           <>
             <Text style={{ marginTop: 10 }}>Deposit Slip:</Text>
-            <Image src={imageUrl} style={{ width: 200, height: 200 }} />
+            <Image
+              src={
+                depositSlipUrl.startsWith("http")
+                  ? depositSlipUrl
+                  : `https://vepoxyrnrsmcvshjfhuv.supabase.co${depositSlipUrl}`
+              }
+              style={{ width: 200, height: 200 }}
+            />
           </>
         )}
       </Page>
