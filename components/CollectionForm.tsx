@@ -5,8 +5,6 @@ import { supabase } from "../lib/supabase";
 import { pdf } from "@react-pdf/renderer";
 import { CollectionPDF } from "./CollectionPDF";
 import toast from "react-hot-toast";
-import { useRef } from "react";
-import path from "path/win32";
 
 type Donation = {
   donor_name: string;
