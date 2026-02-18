@@ -213,3 +213,36 @@ button:disabled {
     flex: 1 1 100%;
   }
 }
+
+.camera-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.camera-wrapper {
+  position: relative;
+  width: 90%;
+  max-width: 500px;
+}
+
+.camera-wrapper video {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  aspect-ratio: 2.2 / 1;
+  transform: translate(-50%, -50%);
+  border: 3px solid #10b981;
+  border-radius: 8px;
+  pointer-events: none;
+}

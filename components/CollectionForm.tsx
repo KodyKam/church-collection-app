@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { pdf } from "@react-pdf/renderer";
 import { CollectionPDF } from "./CollectionPDF";
 import toast from "react-hot-toast";
+import { useRef } from "react";
 
 type Donation = {
   donor_name: string;
@@ -22,6 +23,11 @@ export default function CollectionForm() {
   ]);
   const [depositSlip, setDepositSlip] = useState<File | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // add camera state for mobile users
+  const [showCamera, setShowCamera] = useState(false);
+const videoRef = useRef<HTMLVideoElement | null>(null);
+const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -56,6 +62,80 @@ export default function CollectionForm() {
     [field]: field === "amount" ? Number(value) : value
   } as Donation;
   setDonations(updated);
+};
+
+// Open camera for mobile users to capture deposit slip
+const openCamera = async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play();
+    }
+
+    setShowCamera(true);
+  } catch (err) {
+    toast.error("Camera access denied.");
+  }
+};
+
+// Capture and crop photo to 2.2:1 ratio for deposit slip
+const capturePhoto = async () => {
+  if (!videoRef.current || !canvasRef.current) return;
+
+  const video = videoRef.current;
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
+
+  // Check ratio 2.2:1
+  const cropWidth = videoWidth * 0.8;
+  const cropHeight = cropWidth / 2.2;
+
+  const startX = (videoWidth - cropWidth) / 2;
+  const startY = (videoHeight - cropHeight) / 2;
+
+  canvas.width = cropWidth;
+  canvas.height = cropHeight;
+
+  ctx.drawImage(
+    video,
+    startX,
+    startY,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    cropWidth,
+    cropHeight
+  );
+
+  canvas.toBlob(
+    (blob) => {
+      if (!blob) return;
+
+      const file = new File([blob], `deposit_${Date.now()}.jpg`, {
+        type: "image/jpeg"
+      });
+
+      setDepositSlip(file);
+      toast.success("Deposit slip captured");
+
+      // stop camera
+      const stream = video.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+
+      setShowCamera(false);
+    },
+    "image/jpeg",
+    0.7 // compression quality
+  );
 };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -211,31 +291,30 @@ export default function CollectionForm() {
 
         <div className="form-row">
           <label>
-            Deposit Slip (required):
-            <input
-  type="file"
-  accept="image/*"
-  capture="environment"
-  onChange={(e) => {
-    if (e.target.files?.[0]) {
-      setDepositSlip(e.target.files[0]);
-    }
-  }}
-/>
-{depositSlip && (
-  <img
-  src={URL.createObjectURL(depositSlip)}
-  alt="Preview"
-  style={{
-    maxWidth: "150px",
-    height: "auto",
-    display: "block",
-    marginTop: "0.5rem",
-    borderRadius: "8px"
-  }}
-/>
-)}
-          </label>
+  Deposit Slip (required):
+
+  {!depositSlip && ( //Camera UI for mobile users
+    <button type="button" onClick={openCamera} className="btn-add">
+      Take Photo
+    </button>
+  )}
+
+  {depositSlip && (
+    <>
+      <img
+        src={URL.createObjectURL(depositSlip)}
+        alt="Preview"
+      />
+      <button
+        type="button"
+        onClick={() => setDepositSlip(null)}
+        style={{ marginTop: "0.5rem", background: "#dc2626", color: "#fff" }}
+      >
+        Remove
+      </button>
+    </>
+  )}
+</label>
         </div>
       </div>
 
@@ -261,6 +340,23 @@ export default function CollectionForm() {
 <div style={{ backgroundColor: "#fff3cd", padding: "0.5rem", borderRadius: "6px", marginBottom: "1rem" }}>
   ⚠️ Submit & Export Collection buttons need improvements. See developer note in code.
 </div>
+
+{showCamera && (
+  <div className="camera-modal">
+    <div className="camera-wrapper">
+      <video ref={videoRef} />
+
+      <div className="overlay" />
+
+      <button onClick={capturePhoto} className="btn-submit">
+        Capture
+      </button>
+    </div>
+
+    <canvas ref={canvasRef} style={{ display: "none" }} />
+  </div>
+)}
+
       <button type="submit" disabled={isSubmitting} className="btn-submit">
   {isSubmitting ? "Saving..." : "Submit Collection"}
     </button>
