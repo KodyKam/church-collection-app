@@ -8,6 +8,16 @@
 
 body {
   background: #f4f4f4;
+  line-height: 1.5;
+}
+
+/* Normalize form elements */
+input,
+select,
+button,
+textarea {
+  font-family: inherit;
+  font-size: 1rem;
 }
 
 /* === Collection Form Styles === */
@@ -38,7 +48,7 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* Form Groups */
+/* === Form Groups === */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -59,20 +69,29 @@ body {
   gap: 0.25rem;
 }
 
+/* Inputs and selects */
 .form-row input,
 .form-row select {
   margin-top: 4px;
-  padding: 0.5rem;
+  padding: 0.6rem;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-size: 0.95rem;
+  font-size: 1rem; /* normalized */
+  background: #fff;
 }
 
-/* === Donation Rows aligned with form-row style === */
+.form-row input:focus,
+.form-row select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* === Donation Rows === */
 .donation-row {
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap; /* stack on small screens */
+  flex-wrap: wrap;
   margin-bottom: 1rem;
   padding: 0.75rem;
   border-radius: 8px;
@@ -82,16 +101,17 @@ body {
 
 .donation-row input,
 .donation-row select {
-  flex: 1 1 20%; /* each field takes proportional width */
-  min-width: 120px; /* prevents collapsing on small screens */
-  padding: 0.45rem;
+  flex: 1 1 20%;
+  min-width: 120px;
+  padding: 0.6rem;
   border-radius: 6px;
   border: 1px solid #ccc;
-  font-size: 0.9rem;
+  font-size: 1rem; /* FIXED SHRINKING */
+  background: #fff;
 }
 
 .donation-row select {
-  max-width: 180px; /* prevents dropdown from leaking */
+  max-width: 200px;
 }
 
 .donation-row input:focus,
@@ -101,7 +121,16 @@ body {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
-/* Total Amount */
+/* === Image Preview (Prevents Massive Mobile Resize) === */
+.collection-form img {
+  max-width: 150px;
+  height: auto;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  display: block;
+}
+
+/* === Total Amount === */
 .total-row {
   font-size: 1.1rem;
   font-weight: bold;
@@ -110,17 +139,18 @@ body {
   color: #1e40af;
 }
 
-/* Buttons */
-.btn-add,
-.btn-submit {
-  padding: 0.55rem 1rem;
+/* === Buttons (Unified System) === */
+button {
+  padding: 0.6rem 1rem;
   border-radius: 6px;
   border: none;
   font-weight: bold;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, opacity 0.2s ease;
 }
 
+/* Add Another Offering */
 .btn-add {
   align-self: start;
   background-color: #1e40af;
@@ -131,6 +161,7 @@ body {
   background-color: #3749c0;
 }
 
+/* Submit Button */
 .btn-submit {
   background-color: #10b981;
   color: #fff;
@@ -140,33 +171,35 @@ body {
   background-color: #0f8f6f;
 }
 
-/* Success Message */
+/* Export Button */
+.export-section button {
+  background-color: #f59e0b;
+  color: #fff;
+}
+
+.export-section button:hover {
+  background-color: #d97706;
+}
+
+/* Disabled Buttons */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* === Success Message === */
 .success-msg {
   color: #059669;
   font-weight: bold;
   margin-top: 1rem;
 }
 
-/* Export Section */
+/* === Export Section === */
 .export-section {
   margin-top: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.export-section button {
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: none;
-  background-color: #f59e0b;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.export-section button:hover {
-  background-color: #d97706;
+  gap: 0.75rem;
 }
 
 /* === Responsive === */
@@ -175,12 +208,8 @@ body {
     flex: 1 1 100%;
   }
 
-  .donation-row {
-    grid-template-columns: 1fr;
-  }
-
   .donation-row input,
   .donation-row select {
-    width: 100%;
+    flex: 1 1 100%;
   }
 }

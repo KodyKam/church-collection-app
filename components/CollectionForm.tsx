@@ -123,11 +123,11 @@ export default function CollectionForm() {
     setDonations([
       { donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" },
     ]);
+    toast.success("Collection saved successfully!");
     setDepositSlip(null);
   } catch (err) {
     console.error(err);
     toast.error("Something went wrong. Please check console.");
-    toast.success("Collection saved successfully!");
   } finally {
     setIsSubmitting(false);
   }
@@ -224,10 +224,16 @@ export default function CollectionForm() {
 />
 {depositSlip && (
   <img
-    src={URL.createObjectURL(depositSlip)}
-    alt="Preview"
-    className="w-32 mt-2 rounded"
-  />
+  src={URL.createObjectURL(depositSlip)}
+  alt="Preview"
+  style={{
+    maxWidth: "150px",
+    height: "auto",
+    display: "block",
+    marginTop: "0.5rem",
+    borderRadius: "8px"
+  }}
+/>
 )}
           </label>
         </div>
@@ -255,7 +261,7 @@ export default function CollectionForm() {
 <div style={{ backgroundColor: "#fff3cd", padding: "0.5rem", borderRadius: "6px", marginBottom: "1rem" }}>
   ⚠️ Submit & Export Collection buttons need improvements. See developer note in code.
 </div>
-      <button type="submit" disabled={isSubmitting}>
+      <button type="submit" disabled={isSubmitting} className="btn-submit">
   {isSubmitting ? "Saving..." : "Submit Collection"}
     </button>
 
