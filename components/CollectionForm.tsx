@@ -73,7 +73,11 @@ const openCamera = async () => {
 
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
-      videoRef.current.play();
+
+      // WAIT for metadata before playing
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current?.play();
+      };
     }
 
     setShowCamera(true);
@@ -83,18 +87,24 @@ const openCamera = async () => {
 };
 
 // Capture and crop photo to 2.2:1 ratio for deposit slip
-const capturePhoto = async () => {
-  if (!videoRef.current || !canvasRef.current) return;
-
+const capturePhoto = () => {
   const video = videoRef.current;
   const canvas = canvasRef.current;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+
+  if (!video || !canvas) return;
 
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
 
-  // Check ratio 2.2:1
+  if (!videoWidth || !videoHeight) {
+    toast.error("Camera not ready yet. Try again.");
+    return;
+  }
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  // 2.2:1 ratio
   const cropWidth = videoWidth * 0.8;
   const cropHeight = cropWidth / 2.2;
 
@@ -118,7 +128,10 @@ const capturePhoto = async () => {
 
   canvas.toBlob(
     (blob) => {
-      if (!blob) return;
+      if (!blob) {
+        toast.error("Capture failed. Try again.");
+        return;
+      }
 
       const file = new File([blob], `deposit_${Date.now()}.jpg`, {
         type: "image/jpeg"
@@ -127,14 +140,14 @@ const capturePhoto = async () => {
       setDepositSlip(file);
       toast.success("Deposit slip captured");
 
-      // stop camera
+      // Stop camera
       const stream = video.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
 
       setShowCamera(false);
     },
     "image/jpeg",
-    0.7 // compression quality
+    0.7
   );
 };
 
