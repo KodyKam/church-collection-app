@@ -23,6 +23,9 @@ export default function CollectionForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
   // Export collections state
   const [exportStart, setExportStart] = useState(new Date().toISOString().slice(0, 10));
   const [exportEnd, setExportEnd] = useState(new Date().toISOString().slice(0, 10));
@@ -57,7 +60,7 @@ export default function CollectionForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
 
     if (!depositSlip) {
       alert("Deposit slip is required!");
@@ -131,27 +134,14 @@ export default function CollectionForm() {
 
   // Export collections for date range
   const handleExportCollections = async () => {
-    setLoading(true);
-
-    // const { data: collections, error } = await supabase
-    //   .from("collections")
-    //   .select("*, donations(*)")
-    //   .gte("date", exportStart)
-    //   .lte("date", exportEnd)
-    //   .order("date", { ascending: true });
-
-    // if (error) {
-    //   console.error(error);
-    //   setLoading(false);
-    //   return;
-    // }
+    setIsExporting(true);
 
     const { data: collections, error } = await supabase
   .from("collections")
   .select("*, donations(*)");
 
 if (!collections) {
-  setLoading(false);
+  setIsExporting(false);
   return;
 }
 
@@ -257,7 +247,9 @@ if (!collections) {
 <div style={{ backgroundColor: "#fff3cd", padding: "0.5rem", borderRadius: "6px", marginBottom: "1rem" }}>
   ⚠️ Submit & Export Collection buttons need improvements. See developer note in code.
 </div>
-      <button type="submit" disabled={loading} className="btn-submit">{loading ? "Saving..." : "Submit Collection"}</button>
+      <button type="submit" disabled={isSubmitting}>
+  {isSubmitting ? "Saving..." : "Submit Collection"}
+    </button>
 
       {success && <p className="success-msg">Collection saved successfully!</p>}
 
@@ -274,8 +266,8 @@ if (!collections) {
             <input type="date" value={exportEnd} onChange={(e) => setExportEnd(e.target.value)} />
           </label>
         </div>
-        <button type="button" onClick={handleExportCollections} disabled={loading}>
-          {loading ? "Exporting..." : "Export Collections PDF"}
+        <button type="button" onClick={handleExportCollections} disabled={isExporting}>
+          {isExporting ? "Exporting..." : "Export Collections PDF"}
         </button>
       </div>
     </form>
