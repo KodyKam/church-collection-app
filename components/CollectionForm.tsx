@@ -188,10 +188,18 @@ const compressImage = (file: File): Promise<File> => {
     ]);
     toast.success("Collection saved successfully!");
     setDepositSlip(null);
-  } catch (err) {
-    console.error(err);
-    toast.error("Something went wrong. Please check console.");
-  } finally {
+  } catch (err: any) {
+  console.error(err);
+
+  const message =
+    err?.message ||
+    err?.error_description ||
+    JSON.stringify(err) ||
+    "Unknown error";
+
+  toast.error(message);
+  setErrorMsg(message);
+} finally {
     setIsSubmitting(false);
   }
 };
