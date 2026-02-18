@@ -67,24 +67,28 @@ export default function CollectionForm() {
 
 // Compress image before upload to save bandwidth and storage space
 const compressImage = (file: File): Promise<File> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.readAsDataURL(file);
-
+    reader.onerror = () => reject(new Error("Failed to read file"));
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target?.result as string;
 
+      img.onerror = () => reject(new Error("Failed to load image"));
       img.onload = () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+        if (!ctx) return reject(new Error("Canvas not supported"));
 
-        const maxWidth = 1200; // limit resolution
-        const scale = maxWidth / img.width;
-        const width = img.width > maxWidth ? maxWidth : img.width;
-        const height = img.width > maxWidth ? img.height * scale : img.height;
+        const maxWidth = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          const scale = maxWidth / width;
+          width = maxWidth;
+          height = height * scale;
+        }
 
         canvas.width = width;
         canvas.height = height;
@@ -93,7 +97,7 @@ const compressImage = (file: File): Promise<File> => {
 
         canvas.toBlob(
           (blob) => {
-            if (!blob) return;
+            if (!blob) return reject(new Error("Canvas toBlob failed"));
 
             const compressedFile = new File(
               [blob],
@@ -104,10 +108,19 @@ const compressImage = (file: File): Promise<File> => {
             resolve(compressedFile);
           },
           "image/jpeg",
-          0.7 // compression quality (0.7 is good balance)
+          0.7
         );
       };
+
+      // iOS Safari quirk: sometimes needs explicit data URL conversion
+      if (typeof event.target?.result === "string") {
+        img.src = event.target.result;
+      } else {
+        reject(new Error("FileReader result is not a string"));
+      }
     };
+
+    reader.readAsDataURL(file);
   });
 };
 
@@ -263,24 +276,49 @@ const compressImage = (file: File): Promise<File> => {
           </label>
         </div>
 
-        <div className="form-row">
+        
+      </div>
+
+      <h2>Offerings</h2>
+      {donations.map((d, i) => (
+        <div key={i} className="donation-row">
+          <input type="text" placeholder="Donor Name" value={d.donor_name} onChange={(e) => handleDonationChange(i, "donor_name", e.target.value)} required />
+          <input type="text" placeholder="Check #" value={d.check_number} onChange={(e) => handleDonationChange(i, "check_number", e.target.value)} />
+          <input type="number" placeholder="Amount" value={d.amount} onChange={(e) => handleDonationChange(i, "amount", e.target.value)} required />
+          <select value={d.donation_type} onChange={(e) => handleDonationChange(i, "donation_type", e.target.value)} required>
+            {donationTypes.map((t) => <option key={t}>{t}</option>)}
+          </select>
+        </div>
+      ))}
+
+      <button type="button" onClick={addDonationRow} className="btn-add">Add Another Offering</button>
+      
+      <div className="total-row">
+        <strong>Total: </strong>${totalAmount.toFixed(2)}
+      </div>
+
+      <div className="form-row">
           <label>
   Deposit Slip (required):
 
   <input
-    type="file"
-    accept="image/*"
-    capture="environment"
-    onChange={async (e) => {
+  type="file"
+  accept="image/*"
+  capture="environment"
+  onChange={async (e) => {
+    try {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      // Compress image before saving
       const compressed = await compressImage(file);
       setDepositSlip(compressed);
       toast.success("Deposit slip added");
-    }}
-  />
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to process deposit slip. Try again.");
+    }
+  }}
+/>
 
   {depositSlip && (
     <>
@@ -306,30 +344,6 @@ const compressImage = (file: File): Promise<File> => {
   )}
 </label>
         </div>
-      </div>
-
-      <h2>Offerings</h2>
-      {donations.map((d, i) => (
-        <div key={i} className="donation-row">
-          <input type="text" placeholder="Donor Name" value={d.donor_name} onChange={(e) => handleDonationChange(i, "donor_name", e.target.value)} required />
-          <input type="text" placeholder="Check #" value={d.check_number} onChange={(e) => handleDonationChange(i, "check_number", e.target.value)} />
-          <input type="number" placeholder="Amount" value={d.amount} onChange={(e) => handleDonationChange(i, "amount", e.target.value)} required />
-          <select value={d.donation_type} onChange={(e) => handleDonationChange(i, "donation_type", e.target.value)} required>
-            {donationTypes.map((t) => <option key={t}>{t}</option>)}
-          </select>
-        </div>
-      ))}
-
-      <button type="button" onClick={addDonationRow} className="btn-add">Add Another Offering</button>
-      
-      <div className="total-row">
-        <strong>Total: </strong>${totalAmount.toFixed(2)}
-      </div>
-
-      {/* Future work note */}
-<div style={{ backgroundColor: "#fff3cd", padding: "0.5rem", borderRadius: "6px", marginBottom: "1rem" }}>
-  ⚠️ Submit & Export Collection buttons need improvements. See developer note in code.
-</div>
 
       <button type="submit" disabled={isSubmitting} className="btn-submit">
   {isSubmitting ? "Saving..." : "Submit Collection"}
