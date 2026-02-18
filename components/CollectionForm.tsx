@@ -20,7 +20,6 @@ export default function CollectionForm() {
     { donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" },
   ]);
   const [depositSlip, setDepositSlip] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,26 +58,24 @@ export default function CollectionForm() {
 };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  e.preventDefault();
+  setIsSubmitting(true);
 
+  try {
     if (!depositSlip) {
       alert("Deposit slip is required!");
-      setLoading(false);
       return;
     }
 
-    // 1️⃣ Upload deposit slip
     let depositUrl = "";
-    if (depositSlip) {
-      const { data, error } = await supabase.storage
-        .from("deposit-slips")
-        .upload(`slips/${Date.now()}_${depositSlip.name}`, depositSlip);
-      if (error) console.error(error);
-      else depositUrl = data?.path || "";
-    }
 
-    // 2️⃣ Insert collection
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("deposit-slips")
+      .upload(`slips/${Date.now()}_${depositSlip.name}`, depositSlip);
+
+    if (uploadError) throw uploadError;
+    depositUrl = uploadData?.path || "";
+
     const { data: collection, error: collectionError } = await supabase
       .from("collections")
       .insert([
@@ -93,22 +90,19 @@ export default function CollectionForm() {
       .select()
       .single();
 
-    if (collectionError) {
-      console.error(collectionError);
-      setLoading(false);
-      return;
-    }
+    if (collectionError) throw collectionError;
 
-    // 3️⃣ Insert donations
-    const donationsToInsert = donations.map((d) => ({ ...d, collection_id: collection.id }));
-    const { error: donationsError } = await supabase.from("donations").insert(donationsToInsert);
-    if (donationsError) {
-      console.error(donationsError);
-      setLoading(false);
-      return;
-    }
+    const donationsToInsert = donations.map((d) => ({
+      ...d,
+      collection_id: collection.id,
+    }));
 
-    // 4️⃣ Generate PDF for this collection
+    const { error: donationsError } = await supabase
+      .from("donations")
+      .insert(donationsToInsert);
+
+    if (donationsError) throw donationsError;
+
     const pdfBlob = await pdf(
       <CollectionPDF
         collection={collection}
@@ -118,39 +112,46 @@ export default function CollectionForm() {
       />
     ).toBlob();
 
-    // 5️⃣ Download PDF labeled by collection date
     const url = URL.createObjectURL(pdfBlob);
     const link = document.createElement("a");
     link.href = url;
     link.download = `collection_${collection.date}.pdf`;
     link.click();
 
-    // 6️⃣ Reset form
     setSuccess(true);
-    setLoading(false);
-    setDonations([{ donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" }]);
+    setDonations([
+      { donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" },
+    ]);
     setDepositSlip(null);
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong. Please check console.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Export collections for date range
   const handleExportCollections = async () => {
-    setIsExporting(true);
+  setIsExporting(true);
 
+  try {
     const { data: collections, error } = await supabase
-  .from("collections")
-  .select("*, donations(*)");
+      .from("collections")
+      .select("*, donations(*)")
+      .gte("date", exportStart)
+      .lte("date", exportEnd);
 
-if (!collections) {
-  setIsExporting(false);
-  return;
-}
+    if (error) throw error;
+    if (!collections) return;
 
     for (const collection of collections as any[]) {
       const donationsList = collection.donations || [];
+
       const total = (donationsList as Donation[]).reduce(
-  (sum, d) => sum + (Number(d.amount) || 0),
-  0
-);
+        (sum, d) => sum + (Number(d.amount) || 0),
+        0
+      );
 
       const pdfBlob = await pdf(
         <CollectionPDF
@@ -167,9 +168,13 @@ if (!collections) {
       link.download = `collection_${collection.date}.pdf`;
       link.click();
     }
-
-    setLoading(false);
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Export failed.");
+  } finally {
+    setIsExporting(false);
+  }
+};
 
   return (
     <form className="collection-form" onSubmit={handleSubmit}>
