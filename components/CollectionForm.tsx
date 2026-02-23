@@ -2,9 +2,10 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { pdf } from "@react-pdf/renderer";
-import { CollectionPDF } from "./CollectionPDF";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { pdf } from "@react-pdf/renderer";
+import CollectionPDF from "./CollectionPDF";
 
 type Donation = {
   donor_name: string;
@@ -28,6 +29,8 @@ export default function CollectionForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  const router = useRouter();
 
   // Export collections state
   const [exportStart, setExportStart] = useState(new Date().toISOString().slice(0, 10));
@@ -131,21 +134,18 @@ const compressImage = (file: File): Promise<File> => {
       return;
     }
 
-    // 1️⃣ Upload the file
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // ✅ Timestamped filename
+    const timestampedName = `${Date.now()}_${depositSlip.name}`;
+
+    // 1️⃣ Upload to the private bucket
+    const { error: uploadError } = await supabase.storage
       .from("deposit-slips")
-      .upload(`slips/${Date.now()}_${depositSlip.name}`, depositSlip);
+      .upload(`slips/${timestampedName}`, depositSlip);
 
     if (uploadError) throw uploadError;
 
-    // 2️⃣ Get public URL 
-    // const filePath = uploadData?.path || "";
-    const { data: publicUrlData } = supabase.storage
-      .from("deposit-slips")
-      .getPublicUrl(uploadData.path);
-    
-      // make fully qualified URL for PDF embedding
-    const depositUrl = `https://vepoxyrnrsmcvshjfhuv.supabase.co${publicUrlData.publicUrl}`;
+    // 2️⃣ Store the file path in DB (not URL)
+    const filePath = `slips/${timestampedName}`;
 
     // 3️⃣ Insert collection row
     const { data: collection, error: collectionError } = await supabase
@@ -156,7 +156,8 @@ const compressImage = (file: File): Promise<File> => {
           service_type: serviceType,
           recorded_by: recordedBy,
           counted_by: countedBy,
-          deposit_slip_url: depositUrl,
+          deposit_slip_url: filePath, // store path
+          total: totalAmount,
         },
       ])
       .select()
@@ -169,44 +170,20 @@ const compressImage = (file: File): Promise<File> => {
       ...d,
       collection_id: collection.id,
     }));
-
     const { error: donationsError } = await supabase
       .from("donations")
       .insert(donationsToInsert);
 
     if (donationsError) throw donationsError;
 
-    // 5️⃣ Generate PDF
-    const pdfBlob = await pdf(
-      <CollectionPDF
-        collection={collection}
-        donations={donations}
-        totalAmount={totalAmount}
-        depositSlipUrl={depositUrl}
-      />
-    ).toBlob();
-
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `collection_${collection.date}.pdf`;
-    link.click();
-
-    // 6️⃣ Reset form
-    setSuccess(true);
+    // 5️⃣ Reset form & navigate
+    router.push(`/collection/${collection.id}`);
     setDonations([{ donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" }]);
     setDepositSlip(null);
     toast.success("Collection saved successfully!");
   } catch (err: any) {
     console.error(err);
-    const message =
-      err?.message ||
-      err?.error_description ||
-      JSON.stringify(err) ||
-      "Unknown error";
-
-    toast.error(message);
-    setErrorMsg(message);
+    toast.error(err?.message || "Unknown error");
   } finally {
     setIsSubmitting(false);
   }
@@ -214,7 +191,7 @@ const compressImage = (file: File): Promise<File> => {
 
 
   // Export collections for date range
-  const handleExportCollections = async () => {
+const handleExportCollections = async () => {
   setIsExporting(true);
 
   try {
@@ -230,20 +207,29 @@ const compressImage = (file: File): Promise<File> => {
     for (const collection of collections as any[]) {
       const donationsList = collection.donations || [];
 
-      const total = (donationsList as Donation[]).reduce(
-        (sum, d) => sum + (Number(d.amount) || 0),
-        0
-      );
+      // 1️⃣ Generate signed URL for deposit slip if it exists
+      let depositUrl: string | null = null;
+      if (collection.deposit_slip_url) {
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from("deposit-slips")
+          .createSignedUrl(collection.deposit_slip_url, 60 * 60); // 1 hour
+        if (!signedError) depositUrl = signedData?.signedUrl || null;
+      }
 
+      // 2️⃣ Compute total
+      const total = donationsList.reduce((sum: number, d: any) => sum + (Number(d.amount) || 0), 0);
+
+      // 3️⃣ Render PDF with signed URL
       const pdfBlob = await pdf(
         <CollectionPDF
           collection={collection}
           donations={donationsList}
           totalAmount={total}
-          depositSlipUrl={collection.deposit_slip_url}
+          depositSlipUrl={depositUrl}
         />
       ).toBlob();
 
+      // 4️⃣ Trigger download
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement("a");
       link.href = url;
