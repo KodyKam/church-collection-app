@@ -5,7 +5,7 @@ const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 12, fontFamily: "Helvetica" },
   title: { fontSize: 18, marginBottom: 12, fontWeight: "bold" },
   section: { marginBottom: 12 },
-  table: { display: "table", width: "auto", marginTop: 8, borderWidth: 1, borderColor: "#d1d5db", borderStyle: "solid" },
+  table: { width: "auto", marginTop: 8, borderWidth: 1, borderColor: "#d1d5db", borderStyle: "solid" },
   tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#d1d5db", borderBottomStyle: "solid" },
   tableHeader: { flex: 1, padding: 6, fontWeight: "bold", backgroundColor: "#f3f4f6" },
   tableCell: { flex: 1, padding: 6 },
