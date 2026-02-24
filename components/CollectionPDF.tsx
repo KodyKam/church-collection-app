@@ -57,7 +57,7 @@ export default function CollectionPDF({ collection, donations, totalAmount, depo
           ? depositSlipUrl
           : `https://vepoxyrnrsmcvshjfhuv.supabase.co${depositSlipUrl}`
       }
-      style={{ width: 200, height: 200 }}
+      style={{ width: 300, height: "auto", objectFit: "contain", borderRadius: 6, marginTop: 8 }}
     />
   </View>
 )}
