@@ -1,6 +1,7 @@
 // app/collection/[id]/page.tsx
 import { createClient } from "@supabase/supabase-js";
 import CollectionPreview from "@/components/CollectionPreview";
+import type { Metadata } from "next";
 
 // server-side Supabase client
 const supabase = createClient(
@@ -10,6 +11,10 @@ const supabase = createClient(
 
 type PageProps = {
   params: Promise<{ id: string }>;
+};
+
+export const metadata: Metadata = {
+    title: "Collection Preview",
 };
 
 export default async function Page({ params }: PageProps) {
