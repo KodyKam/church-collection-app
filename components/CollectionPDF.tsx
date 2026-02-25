@@ -9,7 +9,8 @@ const styles = StyleSheet.create({
   tableRow: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#d1d5db", borderBottomStyle: "solid" },
   tableHeader: { flex: 1, padding: 6, fontWeight: "bold", backgroundColor: "#f3f4f6" },
   tableCell: { flex: 1, padding: 6 },
-  totalRow: { flexDirection: "row", fontWeight: "bold", backgroundColor: "#e5e7eb" }
+  totalRow: { flexDirection: "row", fontWeight: "bold", backgroundColor: "#e5e7eb" },
+  footer: { fontSize: 10, textAlign: "center", color: "#555", marginTop: 20 },
 });
 
 export default function CollectionPDF({ collection, donations, totalAmount, depositSlipUrl }: any) {
@@ -24,43 +25,48 @@ export default function CollectionPDF({ collection, donations, totalAmount, depo
 
         <Text style={{ marginTop: 10 }}>Donations:</Text>
         <View style={styles.table}>
-  <View style={styles.tableRow}>
-    <Text style={styles.tableHeader}>Name</Text>
-    <Text style={styles.tableHeader}>Check</Text>
-    <Text style={styles.tableHeader}>Amount</Text>
-    <Text style={styles.tableHeader}>Type</Text>
-  </View>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableHeader}>Name</Text>
+            <Text style={styles.tableHeader}>Check</Text>
+            <Text style={styles.tableHeader}>Amount</Text>
+            <Text style={styles.tableHeader}>Type</Text>
+          </View>
 
-  {donations.map((d: any, i: number) => (
-    <View key={i} style={[styles.tableRow, { backgroundColor: i % 2 === 0 ? "#ffffff" : "#f9fafb" }]}>
-      <Text style={styles.tableCell}>{d.donor_name}</Text>
-      <Text style={styles.tableCell}>{d.check_number}</Text>
-      <Text style={styles.tableCell}>${d.amount.toFixed(2)}</Text>
-      <Text style={styles.tableCell}>{d.donation_type}</Text>
-    </View>
-  ))}
+          {donations.map((d: any, i: number) => (
+            <View key={i} style={[styles.tableRow, { backgroundColor: i % 2 === 0 ? "#ffffff" : "#f9fafb" }]}>
+              <Text style={styles.tableCell}>{d.donor_name}</Text>
+              <Text style={styles.tableCell}>{d.check_number}</Text>
+              <Text style={styles.tableCell}>${d.amount.toFixed(2)}</Text>
+              <Text style={styles.tableCell}>{d.donation_type}</Text>
+            </View>
+          ))}
 
-  <View style={styles.totalRow}>
-    <Text style={[styles.tableCell, { flex: 2 }]}>Total</Text>
-    <Text style={[styles.tableCell, { flex: 2 }]}>${totalAmount.toFixed(2)}</Text>
-  </View>
-</View>
+          <View style={styles.totalRow}>
+            <Text style={[styles.tableCell, { flex: 2 }]}>Total</Text>
+            <Text style={[styles.tableCell, { flex: 2 }]}>${totalAmount.toFixed(2)}</Text>
+          </View>
+        </View>
 
         <Text style={{ marginTop: 10 }}>Total: ${totalAmount.toFixed(2)}</Text>
 
         {depositSlipUrl && (
-  <View style={{ marginTop: 10, alignItems: "center" }}>
-    <Text style={{ marginBottom: 6, textAlign: "left"}}>Deposit Slip:</Text>
-    <Image
-      src={
-        depositSlipUrl.startsWith("http")
-          ? depositSlipUrl
-          : `https://vepoxyrnrsmcvshjfhuv.supabase.co${depositSlipUrl}`
-      }
-      style={{ width: 300, height: "auto", objectFit: "contain", borderRadius: 6, marginTop: 8 }}
-    />
-  </View>
-)}
+          <View style={{ marginTop: 10, alignItems: "center" }}>
+            <Text style={{ marginBottom: 6, textAlign: "left" }}>Deposit Slip:</Text>
+            <Image
+              src={
+                depositSlipUrl.startsWith("http")
+                  ? depositSlipUrl
+                  : `https://vepoxyrnrsmcvshjfhuv.supabase.co${depositSlipUrl}`
+              }
+              style={{ width: 300, height: "auto", objectFit: "contain", borderRadius: 6, marginTop: 8 }}
+            />
+          </View>
+        )}
+
+        {/* PDF Footer */}
+        <Text style={{ ...styles.footer, position: "absolute", bottom: 20, left: 0, right: 0 }}>
+          Israel The Church Of Jesus Toronto | 6355 Airport Rd, Mississauga, ON | 647-498-7035
+        </Text>
       </Page>
     </Document>
   );

@@ -3,7 +3,7 @@ import CollectionForm from "../components/CollectionForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "New Collection Entry",
+  title: "New Collection Entry | Tithr",
   description: "Create a new collection entry for the weekly church offerings.",
 }
 

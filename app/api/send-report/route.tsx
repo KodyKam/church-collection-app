@@ -55,7 +55,7 @@ const pdfBase64 = pdfBuffer.toString("base64");
             .join("")}
         </ul>
         <p style="font-weight: bold; margin-top: 0.5rem;">TOTAL: $${total.toFixed(2)}</p>
-        <p style="margin-top: 1rem;">The full collection report PDF will be attached in the next step.</p>
+        <p style="margin-top: 1rem;">The full collection report PDF with deposit slip image is attached.</p>
       </div>
     `;
 
