@@ -2,6 +2,7 @@
 import { createClient } from "@supabase/supabase-js";
 import CollectionPreview from "@/components/CollectionPreview";
 import type { Metadata } from "next";
+import { getChurchSettings } from "@/lib/getChurchSettings";
 
 // server-side Supabase client
 const supabase = createClient(
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
 export default async function Page({ params }: PageProps) {
   // ✅ Unwrap params promise
   const { id } = await params;
+
+  const church = await getChurchSettings();
 
   // Fetch collection + donations
   const { data: collection, error } = await supabase
@@ -43,5 +46,5 @@ export default async function Page({ params }: PageProps) {
   }
 
   // ✅ Pass data to client component for PDF/buttons
-  return <CollectionPreview collection={collection} depositUrl={depositUrl} />;
+  return <CollectionPreview collection={collection} depositUrl={depositUrl} church={church} />;
 }

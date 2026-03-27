@@ -1,4 +1,8 @@
 /* === Global Reset === */
+:root {
+  --slot-y: 55%; /* main vertical anchor */
+  --slot-offset: -125px; /* tweak this ONLY for up/down movement */
+}
 * {
   box-sizing: border-box;
   margin: 0;
@@ -245,4 +249,137 @@ button:disabled {
   border: 3px solid #10b981;
   border-radius: 8px;
   pointer-events: none;
+}
+
+/* Hide "Tithr" text on small screens */
+@media (max-width: 640px) {
+  .tithr-text {
+    display: none;
+  }
+  .navbar-logo {
+    height: 40px !important;
+  }
+
+  .church-logo {
+    height: 40px !important;
+  }
+  .auth-bg {
+    background-size: cover; /* 90vw auto */
+    background-position: center 50%;
+  }
+  .auth-overlay {
+    top: 50%;
+  }
+  .auth-input {
+    width: min(280px, 80vw);
+  }
+  :root {
+    --slot-y: 50%;
+    --slot-offset: 10px;
+  }
+
+  /* Card adjustments for mobile */
+  .auth-container {
+    max-width: 94%;
+    margin: 1rem auto;
+    width: calc(100% - 1rem);
+  }
+}
+
+.auth-container {
+  position: relative;
+  /* Adjust based on layout */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+  /* width: 100%; */
+  /* height: 100vh; */
+  padding: 3rem 0; /* vertical padding to give the card height */
+  overflow: hidden;
+
+    /* ✨ NEW: Card styling */
+  margin: 2rem auto;
+  max-width: 560px;
+  width: calc(100% - 2rem);
+  border-radius: 2rem;
+  box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.5), 0 8px 20px rgba(0, 0, 0, 0.3);
+  background: transparent; /* Let auth-bg fill the card */
+}
+
+/* Background image layer */
+.auth-bg {
+  position: absolute;
+  inset: 0;
+
+  background-image: url("/shekel-slot.png");
+  background-repeat: no-repeat;
+  /* opacity: 0.8; */
+
+  background-size: cover; /* min(500px, 80vw) auto; */
+
+  /* 🔑 magic */
+  background-position: center; /* calc(var(--slot-y) + var(--slot-offset)); */
+
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Overlay content */
+.auth-overlay {
+  position: absolute;
+
+  /* 🔑 EXACT SAME anchor point */
+  top: var(--slot-y);
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  z-index: 1;
+  width: 100%;
+  padding: 1rem;
+}
+
+/* Input styled as "slot" */
+.auth-input {
+  width: 260px;
+  padding: 12px 16px;
+
+  background: rgba(0, 0, 0, 0.75); /* 👈 dark slot illusion */
+  backdrop-filter: blur(2px);
+  color: #fff;
+
+  border: none;
+  border-radius: 20px;
+  outline: none;
+
+  text-align: center;
+  font-size: 1rem;
+
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+
+  transition: all 0.3s ease; /* animates transition when user enters name -> password */
+}
+
+/* Button */
+.auth-button {
+  padding: 10px 20px;
+  background: #a99667;
+  color: #fff;
+  border: 2px black solid;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.login-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(255,255,255,0.6);
+  color: white;
+  font-size: 1.1rem;
 }

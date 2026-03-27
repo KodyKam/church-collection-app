@@ -1,11 +1,12 @@
 // components/CollectionForm.tsx
 "use client";
-import { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { pdf } from "@react-pdf/renderer";
 import CollectionPDF from "./CollectionPDF";
+import { getChurchClient } from "@/lib/getChurchClient";
 
 type Donation = {
   donor_name: string;
@@ -29,6 +30,32 @@ export default function CollectionForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => { // this loads user on mount
+    const loadUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setUser(user);
+    };
+
+    loadUser();
+  }, []);
+
+  const [church, setChurch] = useState<any>(null);
+
+  useEffect(() => {
+    const loadChurch = async () => {
+      const res = await fetch("/api/church");
+      const data = await res.json();
+      setChurch(data);
+    };
+    
+    loadChurch();
+  }, []);
 
   const router = useRouter();
 
@@ -125,8 +152,15 @@ const compressImage = (file: File): Promise<File> => {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
+
   e.preventDefault();
   setIsSubmitting(true);
+
+      if (!user) { // to guard 
+      toast.error("Not authenticated");
+      setIsSubmitting(false);
+      return;
+    }
 
   try {
     if (!depositSlip) {
@@ -158,6 +192,7 @@ const compressImage = (file: File): Promise<File> => {
           counted_by: countedBy,
           deposit_slip_url: filePath, // store path
           total: totalAmount,
+          // user_id: user.id, removed be DB default is set
         },
       ])
       .select()
@@ -170,6 +205,7 @@ const compressImage = (file: File): Promise<File> => {
       ...d,
       collection_id: collection.id,
     }));
+    
     const { error: donationsError } = await supabase
       .from("donations")
       .insert(donationsToInsert);
@@ -188,7 +224,6 @@ const compressImage = (file: File): Promise<File> => {
     setIsSubmitting(false);
   }
 };
-
 
   // Export collections for date range
 const handleExportCollections = async () => {
@@ -226,6 +261,7 @@ const handleExportCollections = async () => {
           donations={donationsList}
           totalAmount={total}
           depositSlipUrl={depositUrl}
+          church={church}
         />
       ).toBlob();
 
@@ -244,9 +280,18 @@ const handleExportCollections = async () => {
   }
 };
 
+// useEffect(() => {
+//   const load = async () => {
+//     const res = await fetch("/api/church"); // we'll add this
+//     const data = await res.json();
+//     setChurch(data);
+//   };
+//   load();
+// }, []);
+
   return (
     <form className="collection-form" onSubmit={handleSubmit}>
-      <h1>Weekly Collection Entry</h1>
+      <h1>Weekly Collection Entry</h1> {/* to be checked for possible deletion */}
 
       <div className="form-group">
         <div className="form-row">

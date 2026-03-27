@@ -1,7 +1,10 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "react-hot-toast"; // ✅ Correct import
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
+
+export const dynamic = "force-dynamic"; //disabling caching so updates appear instantly
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,26 +23,6 @@ export const metadata: Metadata = {
   },
   description:
     "Tithr helps churches record offerings, generate deposit reports, and manage weekly collections securely and efficiently.",
-
-  keywords: [
-    "church offering software",
-    "tithe tracking",
-    "church collection management",
-    "offering reports",
-    "church finance software",
-    "tithing management",
-  ],
-
-  applicationName: "Tithr",
-
-  openGraph: {
-    title: "Tithr — Church Offering Management",
-    description:
-      "Record offerings, generate deposit slips, and export collection reports with Tithr.",
-    type: "website",
-  },
-
-  metadataBase: new URL("https://tithr.app"), // change later when domain is live
 };
 
 export default function RootLayout({
@@ -49,12 +32,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
 
-        {/* ✅ Toast container goes here */}
         <Toaster
           position="top-center"
           toastOptions={{

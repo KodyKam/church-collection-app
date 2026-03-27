@@ -3,6 +3,13 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { pdf } from "@react-pdf/renderer";
 import CollectionPDF from "@/components/CollectionPDF";
+import { getChurchSettings } from "@/lib/getChurchSettings";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -10,6 +17,8 @@ export async function POST(req: Request) {
   try {
     const { collection, donations, total, depositUrl } = await req.json();
     
+    const church = await getChurchSettings();
+
     const depositSlipUrl = depositUrl;
 const pdfDoc = pdf(
   <CollectionPDF
@@ -17,6 +26,7 @@ const pdfDoc = pdf(
     donations={donations}
     totalAmount={total}
     depositSlipUrl={depositUrl}
+    church={church}
   />
 );
 

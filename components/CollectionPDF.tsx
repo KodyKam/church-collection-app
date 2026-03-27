@@ -13,11 +13,24 @@ const styles = StyleSheet.create({
   footer: { fontSize: 10, textAlign: "center", color: "#555", marginTop: 20 },
 });
 
-export default function CollectionPDF({ collection, donations, totalAmount, depositSlipUrl }: any) {
+export default function CollectionPDF({ collection, donations, totalAmount, depositSlipUrl, church }: any) {
   return (
     <Document>
       <Page style={styles.page}>
-        <Text style={{ fontSize: 18, marginBottom: 10, textAlign: "center" }}>Weekly Collection Summary</Text>
+        {/* Church Logo */}
+        {church?.logo_url && (
+          <View style={{ alignItems: "center", marginBottom: 10 }}>
+            <Image
+              src={church.logo_url}
+              style={{ width: 80, height: 80, objectFit: "contain" }}
+            />
+          </View>
+        )}
+
+        {/* Title */}
+        <Text style={{ fontSize: 18, marginBottom: 10, textAlign: "center" }}>
+          Weekly Collection Summary
+        </Text>
         <Text>Date: {collection.date}</Text>
         <Text>Service Type: {collection.service_type}</Text>
         <Text>Recorded By: {collection.recorded_by}</Text>
@@ -64,8 +77,16 @@ export default function CollectionPDF({ collection, donations, totalAmount, depo
         )}
 
         {/* PDF Footer */}
-        <Text style={{ ...styles.footer, position: "absolute", bottom: 20, left: 0, right: 0 }}>
-          Israel The Church Of Jesus Toronto | 6355 Airport Rd, Mississauga, ON | 647-498-7035
+        <Text
+          style={{
+            ...styles.footer,
+            position: "absolute",
+            bottom: 20,
+            left: 0,
+            right: 0,
+          }}
+        >
+          {church?.name} | {church?.address} | {church?.phone}
         </Text>
       </Page>
     </Document>

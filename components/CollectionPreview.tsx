@@ -1,3 +1,4 @@
+// components/CollectionPreview.tsx
 "use client";
 
 import { useState } from "react";
@@ -5,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { pdf } from "@react-pdf/renderer";
 import CollectionPDF from "./CollectionPDF";
 
-export default function CollectionPreview({ collection, depositUrl }: any) {
+export default function CollectionPreview({ collection, depositUrl, church }: any) {
   const router = useRouter();
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -30,6 +31,7 @@ export default function CollectionPreview({ collection, depositUrl }: any) {
           donations={collection.donations}
           totalAmount={totalAmount}
           depositSlipUrl={depositUrl}
+          church={church} 
         />
       ).toBlob();
 
