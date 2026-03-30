@@ -215,7 +215,7 @@ export default function SettingsForm() {
               padding: "8px 14px",
               borderRadius: "6px",
               border: "1px solid #ddd",
-              background: "#fff",
+              background: "#ffff18",
               cursor: "pointer",
             }}
           >
@@ -229,7 +229,7 @@ export default function SettingsForm() {
               padding: "8px 14px",
               borderRadius: "6px",
               border: "none",
-              background: "#111827",
+              background: "#029c1b",
               color: "#fff",
               cursor: "pointer",
             }}

@@ -27,6 +27,7 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
     try {
       const blob = await pdf(
         <CollectionPDF
+          key={Date.now()} // to FORCE RE-RENDER and avoid cached results
           collection={collection}
           donations={collection.donations}
           totalAmount={totalAmount}
@@ -53,6 +54,11 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
   =========================== */
   const handleSendEmail = async () => {
     setIsSendingEmail(true);
+
+    if (!church?.email) {
+      alert("Please set a report email in Settings first.");
+      return;
+    }
 
     try {
       const res = await fetch("/api/send-report", {

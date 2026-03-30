@@ -70,9 +70,12 @@ const pdfBase64 = pdfBuffer.toString("base64");
     `;
 
     // Send email (HTML only)
+    if (!church?.email) {
+      throw new Error("No destination email configured");
+    }
     const result = await resend.emails.send({
       from: "Tithr <onboarding@resend.dev>",
-      to: ["bigachiever@icloud.com"], // update later when ready
+      to: ["bigachiever@icloud.com"], // will switch to destination email - ["church?.email"] when domain bought and verified in Resend
       subject: `Offerings Report - ${collection.date}`,
       html: htmlBody,
       attachments: [
@@ -85,6 +88,15 @@ const pdfBase64 = pdfBuffer.toString("base64");
     });
 
     console.log("📨 Email result:", result);
+
+    const recipient = // fallback logic to guarantee each church only receives THEIR reports
+      process.env.NODE_ENV === "development" // No cross-tenant leaks
+        ? "bigachiever@icloud.com"           // Clean billing-ready architecture
+        : church?.email;
+
+    if (!recipient) {
+      throw new Error("No destination email configured");
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {

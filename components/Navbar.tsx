@@ -170,6 +170,20 @@ export default function Navbar({ church }: any) {
         <div
           onClick={() => {
             setOpen(false);
+            router.push("/collections"); // ✅ THIS is where it goes
+          }}
+          style={{
+            padding: "10px 14px",
+            cursor: "pointer",
+            borderBottom: "1px solid #f1f5f9",
+          }}
+        >
+          Collections
+        </div>
+        
+        <div
+          onClick={() => {
+            setOpen(false);
             router.push("/settings");
           }}
           style={{

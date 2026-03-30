@@ -31,12 +31,29 @@ export default function CollectionPDF({ collection, donations, totalAmount, depo
         <Text style={{ fontSize: 18, marginBottom: 10, textAlign: "center" }}>
           Weekly Collection Summary
         </Text>
-        <Text>Date: {collection.date}</Text>
-        <Text>Service Type: {collection.service_type}</Text>
-        <Text>Recorded By: {collection.recorded_by}</Text>
-        <Text>Counted By: {collection.counted_by}</Text>
+        <Text>
+          <Text style={{ marginTop: 6, fontWeight: "bold" }}>Date: </Text>
+          {collection.date}
+        </Text>
 
-        <Text style={{ marginTop: 10 }}>Donations:</Text>
+        <Text>
+          <Text style={{ marginTop: 6, fontWeight: "bold" }}>Service Type: </Text>
+          {collection.service_type}
+        </Text>
+
+        <Text>
+          <Text style={{ marginTop: 6, fontWeight: "bold" }}>Recorded By: </Text>
+          {collection.recorded_by}
+        </Text>
+
+        <Text>
+          <Text style={{ marginTop: 6, fontWeight: "bold" }}>Counted By: </Text>
+          {collection.counted_by}
+        </Text>
+
+        <Text style={{ marginTop: 12 }}>
+          <Text style={{ fontWeight: "bold" }}>Donations:</Text>
+        </Text>
         <View style={styles.table}>
           <View style={styles.tableRow}>
             <Text style={styles.tableHeader}>Name</Text>
@@ -60,7 +77,10 @@ export default function CollectionPDF({ collection, donations, totalAmount, depo
           </View>
         </View>
 
-        <Text style={{ marginTop: 10 }}>Total: ${totalAmount.toFixed(2)}</Text>
+        <Text style={{ marginTop: 10 }}>
+          <Text style={{ fontWeight: "bold" }}>Total: </Text>
+          ${totalAmount.toFixed(2)}
+        </Text>
 
         {depositSlipUrl && (
           <View style={{ marginTop: 10, alignItems: "center" }}>
