@@ -74,6 +74,30 @@ export default function SettingsForm() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+  const confirmed = confirm(
+    "Are you sure you want to delete your account? This cannot be undone."
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch("/api/delete-account", {
+      method: "POST",
+    });
+
+    if (!res.ok) throw new Error("Failed to delete account");
+
+    alert("Account deleted");
+
+    router.push("/register"); // or homepage
+    router.refresh();
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong");
+  }
+};
+
   if (loading) {
     return <p style={{ padding: "2rem" }}>Loading settings...</p>;
   }
@@ -235,6 +259,20 @@ export default function SettingsForm() {
             }}
           >
             {saving ? "Saving..." : "Save Changes"}
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            style={{
+              marginTop: "2rem",
+              background: "#dc2626",
+              color: "#fff",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "none",
+              width: "100%",
+            }}
+          >
+            Delete Account
           </button>
         </div>
       </div>

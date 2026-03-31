@@ -1,7 +1,8 @@
 // lib/getChurchSettings.ts
 import { createServerSupabaseClient } from "./supabaseServer";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function getChurchSettings() {
   const supabase = await createServerSupabaseClient();
 

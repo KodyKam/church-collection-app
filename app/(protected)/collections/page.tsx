@@ -19,20 +19,27 @@ export default function CollectionsPage() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from("collections")
-        .select("*")
-        .order("date", { ascending: false });
+useEffect(() => {
+  const load = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      setCollections(data || []);
-      setFiltered(data || []);
-      setLoading(false);
-    };
+    if (!user) return;
 
-    load();
-  }, []);
+    const { data } = await supabase
+      .from("collections")
+      .select("*")
+      .eq("user_id", user.id) // 🔥 THIS IS THE FIX
+      .order("date", { ascending: false });
+
+    setCollections(data || []);
+    setFiltered(data || []);
+    setLoading(false);
+  };
+
+  load();
+}, []);
 
   // 🔍 FILTERS
   useEffect(() => {

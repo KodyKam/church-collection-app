@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getChurchSettings } from "@/lib/getChurchSettings";
 import LayoutWrapper from "@/components/LayoutWrapper";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProtectedLayout({
   children,
 }: {
@@ -21,6 +23,12 @@ export default async function ProtectedLayout({
   }
 
   const church = await getChurchSettings();
+  if (
+  church.subscription_status !== "active" &&
+  new Date(church.trial_ends_at) < new Date()
+) {
+  redirect("/billing");
+}
 
   return <LayoutWrapper church={church}>{children}</LayoutWrapper>;
 }

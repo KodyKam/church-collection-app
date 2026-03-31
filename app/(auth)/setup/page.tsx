@@ -28,15 +28,17 @@ export default function SetupPage() {
 
     // ✅ Upload logo if provided
     if (logo) {
-      const fileName = `logos/${user.id}_${Date.now()}.png`;
+      const fileExt = logo.name.split(".").pop();
+      const fileName = `logos/${user.id}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("church-logos")
         .upload(fileName, logo);
 
       if (uploadError) {
-        alert("Logo upload failed");
-        return;
+        console.error("UPLOAD ERROR:", uploadError);
+        alert(uploadError.message);
+      return;
       }
 
       // ✅ Get public URL

@@ -25,10 +25,18 @@ export default async function Page({ params }: PageProps) {
   const church = await getChurchSettings();
 
   // Fetch collection + donations
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return <div>Unauthorized</div>;
+  }
   const { data: collection, error } = await supabase
     .from("collections")
     .select("*, donations(*)")
     .eq("id", id)
+    .eq("user_id", user.id) // 🔥 prevents cross-account access
     .single();
 
   if (error || !collection) {
