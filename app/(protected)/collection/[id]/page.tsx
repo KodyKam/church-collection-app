@@ -1,14 +1,8 @@
 // app/collection/[id]/page.tsx
-import { createClient } from "@supabase/supabase-js";
+import { createServerSupabaseClient } from "@/lib/supabaseServer";
 import CollectionPreview from "@/components/CollectionPreview";
 import type { Metadata } from "next";
 import { getChurchSettings } from "@/lib/getChurchSettings";
-
-// server-side Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -25,6 +19,8 @@ export default async function Page({ params }: PageProps) {
   const church = await getChurchSettings();
 
   // Fetch collection + donations
+  const supabase = await createServerSupabaseClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

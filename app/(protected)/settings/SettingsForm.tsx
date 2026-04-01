@@ -11,6 +11,7 @@ export default function SettingsForm() {
   const [loading, setLoading] = useState(true);
   const [logo, setLogo] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const router = useRouter();
 
@@ -81,6 +82,8 @@ export default function SettingsForm() {
 
   if (!confirmed) return;
 
+  setDeleting(true);
+
   try {
     const res = await fetch("/api/delete-account", {
       method: "POST",
@@ -88,7 +91,7 @@ export default function SettingsForm() {
 
     if (!res.ok) throw new Error("Failed to delete account");
 
-    alert("Account deleted");
+    // alert("Account deleted"); deprecated for better UX - redirect to homepage - logged out state
 
     router.push("/register"); // or homepage
     router.refresh();
@@ -260,16 +263,21 @@ export default function SettingsForm() {
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
+        </div>
+
+        {/* 🔥 DANGER ZONE */}
+        <div style={{ marginTop: "2.5rem" }}>
           <button
             onClick={handleDeleteAccount}
+            disabled={deleting}
             style={{
-              marginTop: "2rem",
               background: "#dc2626",
               color: "#fff",
-              padding: "10px",
+              padding: "12px",
               borderRadius: "8px",
               border: "none",
               width: "100%",
+              fontWeight: 600,
             }}
           >
             Delete Account

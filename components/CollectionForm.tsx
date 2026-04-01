@@ -1,6 +1,6 @@
 // components/CollectionForm.tsx
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ type Donation = {
 export default function CollectionForm() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [serviceType, setServiceType] = useState("Sabbath Class");
+  const [customServiceType, setCustomServiceType] = useState("");
   const [recordedBy, setRecordedBy] = useState("");
   const [countedBy, setCountedBy] = useState("");
   const [donations, setDonations] = useState<Donation[]>([
@@ -57,13 +58,31 @@ export default function CollectionForm() {
     loadChurch();
   }, []);
 
+  const getTrialDaysLeft = () => {
+  if (!church?.trial_ends_at) return null;
+
+  const now = new Date();
+  const end = new Date(church.trial_ends_at);
+
+  return Math.ceil(
+    (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+  );
+};
+
+const trialDaysLeft = getTrialDaysLeft();
+
+const isLocked =
+  church?.subscription_status !== "active" &&
+  trialDaysLeft !== null &&
+  trialDaysLeft <= 0;
+
   const router = useRouter();
 
   // Export collections state
   const [exportStart, setExportStart] = useState(new Date().toISOString().slice(0, 10));
   const [exportEnd, setExportEnd] = useState(new Date().toISOString().slice(0, 10));
 
-  const donationTypes = ["Tithes", "Freewill", "Feast", "Audio", "Other"];
+  const donationTypes = ["Tithes", "Freewill", "Feast", "Audio", "Other", "Building Fund", "Missions", "Youth",];
   const serviceTypes = [
     "Sabbath Class",
     "Passover",
@@ -74,6 +93,11 @@ export default function CollectionForm() {
     "Day of Atonement",
     "Feast of Tabernacles",
     "8th Day Feast",
+    "Harvest Festival",
+    "Wedding",
+    "Funeral",
+    "Evening Service",
+    "Other",
   ];
 
   const totalAmount = donations.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
@@ -152,8 +176,29 @@ const compressImage = (file: File): Promise<File> => {
 
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // Determine final service type
+    const finalServiceType =
+    serviceType === "Other" ? customServiceType : serviceType;
 
-  e.preventDefault();
+    e.preventDefault();
+
+    if (serviceType === "Other" && !customServiceType.trim()) {
+      toast.error("Please enter a service type");
+      return;
+    }
+
+    if (isLocked) {
+      alert("Your trial has expired. Please upgrade to continue.");
+      setIsSubmitting(false);
+      router.push("/billing");
+    return;
+  }
+
+    if (!user) {
+    toast.error("Not authenticated");
+    return;
+  }
+
   setIsSubmitting(true);
 
       if (!user) { // to guard 
@@ -165,6 +210,7 @@ const compressImage = (file: File): Promise<File> => {
   try {
     if (!depositSlip) {
       toast.error("Deposit slip is required!");
+      setIsSubmitting(false);
       return;
     }
 
@@ -187,12 +233,12 @@ const compressImage = (file: File): Promise<File> => {
       .insert([
         {
           date,
-          service_type: serviceType,
+          service_type: finalServiceType, // ✅ THIS is where it belongs
           recorded_by: recordedBy,
           counted_by: countedBy,
-          deposit_slip_url: filePath, // store path
+          deposit_slip_url: filePath,
           total: totalAmount,
-          // user_id: user.id, removed be DB default is set
+          user_id: user.id, // 🔥 THIS IS THE FIX
         },
       ])
       .select()
@@ -280,16 +326,42 @@ const handleExportCollections = async () => {
   }
 };
 
-// useEffect(() => {
-//   const load = async () => {
-//     const res = await fetch("/api/church"); // we'll add this
-//     const data = await res.json();
-//     setChurch(data);
-//   };
-//   load();
-// }, []);
-
   return (
+    <div style={{ position: "relative" }}>
+  {isLocked && (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: "rgba(255,255,255,0.7)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 10,
+        borderRadius: "12px",
+      }}
+    >
+      <div style={{ textAlign: "center" }}>
+        <p style={{ marginBottom: "10px", fontWeight: 600 }}>
+          Trial expired
+        </p>
+        <button
+          onClick={() => router.push("/billing")}
+          style={{
+            background: "#dc2626",
+            color: "#fff",
+            padding: "10px 16px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Upgrade to Continue
+        </button>
+      </div>
+    </div>
+  )}
     <form className="collection-form" onSubmit={handleSubmit}>
       <h1>Weekly Collection Entry</h1> {/* to be checked for possible deletion */}
 
@@ -302,9 +374,30 @@ const handleExportCollections = async () => {
 
           <label>
             Service Type:
-            <select value={serviceType} onChange={(e) => setServiceType(e.target.value)} required>
-              {serviceTypes.map((t) => <option key={t}>{t}</option>)}
-            </select>
+            <select
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+              className="auth-input"
+              required
+            >
+              <option value="">Select Service Type</option>
+
+              {serviceTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+              </option>
+            ))}
+          </select>
+          {serviceType === "Other" && (
+            <input
+              autoFocus
+              type="text"
+              placeholder="Enter service type"
+              value={customServiceType}
+              onChange={(e) => setCustomServiceType(e.target.value)}
+              className="auth-input"
+            />
+          )}
           </label>
         </div>
 
@@ -397,7 +490,8 @@ const handleExportCollections = async () => {
 </label>
         </div>
 
-      <button type="submit" disabled={isSubmitting} className="btn-submit">
+      <button type="submit" disabled={isLocked || isSubmitting} className="btn-submit"
+      style={{opacity: isLocked ? 0.5 :1, cursor: isLocked ? "not-allowed" : "pointer"}}>
   {isSubmitting ? "Saving..." : "Submit Collection"}
     </button>
 
@@ -421,5 +515,6 @@ const handleExportCollections = async () => {
         </button>
       </div>
     </form>
+    </div>
   );
 }

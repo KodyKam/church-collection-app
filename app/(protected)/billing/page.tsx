@@ -33,6 +33,21 @@ export default function BillingPage() {
       >
         Upgrade - $19/month
       </button>
+      <button
+        onClick={async () => {
+          const res = await fetch("/api/cancel-subscription", {
+          method: "POST",
+        });
+
+          if (res.ok) {
+            alert("Subscription will cancel at end of billing period.");
+          } else {
+            alert("Failed to cancel subscription.");
+          }
+        }}
+      >
+        Cancel Subscription
+      </button>
     </div>
   );
 }

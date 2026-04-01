@@ -1,16 +1,15 @@
 // app/api/delete-account/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+import { createServerSupabaseClient } from "@/lib/supabaseServer";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2026-03-25.dahlia",
+});
 
 export async function POST() {
   try {
-    const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // 🔥 NOT anon key
-);
+    const supabase = await createServerSupabaseClient();
 
     const {
       data: { user },
@@ -20,37 +19,36 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 🔥 Get church record
+    // get subscription
     const { data: church } = await supabase
       .from("church_settings")
-      .select("*")
+      .select("stripe_subscription_id")
       .eq("user_id", user.id)
       .single();
 
-    // 🔥 1. Cancel Stripe subscription (if exists)
+    // cancel immediately if exists
     if (church?.stripe_subscription_id) {
       await stripe.subscriptions.cancel(church.stripe_subscription_id);
-    } // to be updated to have a "cancelled_at" timestamp instead of hard delete
+    }
+
+    // delete church settings
+    await supabase
+      .from("church_settings")
+      .delete()
+      .eq("user_id", user.id);
+
+    // sign out
+    await supabase.auth.signOut();
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Delete error:", err);
+    return NextResponse.json({ error: "Failed to delete account" }, { status: 500 });
+  }
+}
+
+    // to be updated to have a "cancelled_at" timestamp instead of hard delete
 // snippet below will replace the above line once we have the "cancelled_at" field
 //      await stripe.subscriptions.update(id, {
 //      cancel_at_period_end: true,
 //      });
-
-    // 🔥 2. Delete collections
-    await supabase.from("collections").delete().eq("user_id", user.id);
-
-    // 🔥 3. Delete church settings
-    await supabase.from("church_settings").delete().eq("user_id", user.id);
-
-    // 🔥 4. Delete auth user (IMPORTANT)
-    await supabase.auth.admin.deleteUser(user.id);
-
-    return NextResponse.json({ success: true });
-  } catch (err) {
-    console.error("DELETE ACCOUNT ERROR:", err);
-    return NextResponse.json(
-      { error: "Failed to delete account" },
-      { status: 500 }
-    );
-  }
-}
