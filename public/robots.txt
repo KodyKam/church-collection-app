@@ -3,7 +3,7 @@ Allow: /
 Disallow: /api/
 Disallow: /billing/
 Disallow: /settings/
-Disallow: /collection/*
+Disallow: /collection/
 Disallow: /collections/
 
 Sitemap: https://tithr.ca/sitemap.xml

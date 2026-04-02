@@ -16,13 +16,46 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+export const metadata = {
+  metadataBase: new URL("https://tithr.ca"),
+
   title: {
-    default: "Tithr — Church Offering & Collection Management",
+    default: "Tithr – Church Collection Management",
     template: "%s | Tithr",
   },
+
   description:
-    "Tithr helps churches record offerings, generate deposit reports, and manage weekly collections securely and efficiently.",
+    "Tithr helps churches track offerings, manage collections, and generate reports with ease.",
+
+  openGraph: {
+    title: "Tithr – Church Collection Management",
+    description:
+      "Track, manage, and report church offerings with ease.",
+    url: "https://tithr.ca",
+    siteName: "Tithr",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: "en_CA",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Tithr – Church Collection Management",
+    description:
+      "Track, manage, and report church offerings with ease.",
+    images: ["/og-image.png"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
