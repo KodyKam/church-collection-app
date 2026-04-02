@@ -74,8 +74,8 @@ const pdfBase64 = pdfBuffer.toString("base64");
       throw new Error("No destination email configured");
     }
     const result = await resend.emails.send({
-      from: "Tithr <onboarding@resend.dev>",
-      to: ["bigachiever@icloud.com"], // will switch to destination email - ["church?.email"] when domain bought and verified in Resend
+      from: "Tithr <noreply@tithr.ca>", // Branded sender for better deliverability
+      to: ["church?.email"], // Each church only receives THEIR reports
       subject: `Offerings Report - ${collection.date}`,
       html: htmlBody,
       attachments: [

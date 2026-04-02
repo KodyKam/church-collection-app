@@ -86,14 +86,14 @@ const isLocked =
   const serviceTypes = [
     "Sabbath Class",
     "Passover",
-    "Feast of Unleavened Bread Day 1",
-    "Feast of Unleavened Bread Day 7",
+    "Feast of Unleavened Bread: Day 1",
+    "Feast of Unleavened Bread: Day 7",
     "Pentecost",
     "Memorial of Blowing of Trumpets",
     "Day of Atonement",
     "Feast of Tabernacles",
     "8th Day Feast",
-    "Harvest Festival",
+    "Harvest",
     "Wedding",
     "Funeral",
     "Evening Service",
@@ -377,10 +377,15 @@ const handleExportCollections = async () => {
             <select
               value={serviceType}
               onChange={(e) => setServiceType(e.target.value)}
-              className="auth-input"
+              style={{
+                padding: "10px 12px",
+                borderRadius: "8px",
+                border: "1px solid #ddd",
+                height: "40px",
+              }}              
               required
             >
-              <option value="">Select Service Type</option>
+              {/* <option value="">Select Service Type</option> */} {/* redacted to let "Sabbath Class" be default */}
 
               {serviceTypes.map((type) => (
                 <option key={type} value={type}>
@@ -395,7 +400,6 @@ const handleExportCollections = async () => {
               placeholder="Enter service type"
               value={customServiceType}
               onChange={(e) => setCustomServiceType(e.target.value)}
-              className="auth-input"
             />
           )}
           </label>
