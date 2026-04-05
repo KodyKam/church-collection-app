@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import TrialBanner from "@/components/TrialBanner";
 
 export default function SettingsForm() {
   const [church, setChurch] = useState<any>(null);
@@ -112,9 +113,13 @@ export default function SettingsForm() {
         background: "#f9fafb",
         padding: "2rem",
         display: "flex",
-        justifyContent: "center",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
+      <div style={{ maxWidth: "600px", width: "100%", marginBottom: "1.5rem" }}>
+      <TrialBanner church={church} />
+    </div>
       <div
         style={{
           width: "100%",

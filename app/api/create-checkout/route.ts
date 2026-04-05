@@ -3,9 +3,11 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createServerSupabaseClient } from "@/lib/supabaseServer";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2026-03-25.dahlia",
+});
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
     const supabase = await createServerSupabaseClient();
 
@@ -16,6 +18,8 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { plan } = await req.json(); // 👈 NEW
 
     // get church settings
     const { data: church } = await supabase
@@ -28,6 +32,21 @@ export async function POST() {
       return NextResponse.json({ error: "Church not found" }, { status: 404 });
     }
 
+    // ✅ Pick correct price
+    let priceId: string | undefined;
+
+    if (plan === "monthly") {
+      priceId = process.env.STRIPE_PRICE_MONTHLY;
+    } else if (plan === "quarterly") {
+      priceId = process.env.STRIPE_PRICE_QUARTERLY;
+    } else if (plan === "yearly") {
+      priceId = process.env.STRIPE_PRICE_YEARLY;
+    }
+
+    if (!priceId) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+    }
+
     // ✅ Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -36,7 +55,7 @@ export async function POST() {
 
       line_items: [
         {
-          price: process.env.STRIPE_PRICE_ID_MONTHLY!,
+          price: priceId,
           quantity: 1,
         },
       ],

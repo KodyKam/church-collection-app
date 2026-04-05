@@ -66,7 +66,7 @@ export default function Navbar({ church }: any) {
 >
   {/* LEFT: Logo */}
   <div
-    onClick={() => router.push("/")}
+    onClick={() => router.push("/app")}
     style={{
       display: "flex",
       alignItems: "center",

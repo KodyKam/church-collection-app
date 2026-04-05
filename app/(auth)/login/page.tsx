@@ -36,7 +36,7 @@ export default function LoginPage() {
     if (!church) {
       router.push("/setup"); // 👈 FIRST TIME USERS
     } else {
-      router.push("/");
+      router.push("/app"); // returning users
     }
   };
 

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { pdf } from "@react-pdf/renderer";
 import CollectionPDF from "./CollectionPDF";
 import { getChurchClient } from "@/lib/getChurchClient";
+import TrialBanner from "./TrialBanner";
 
 type Donation = {
   donor_name: string;
@@ -326,8 +327,23 @@ const handleExportCollections = async () => {
   }
 };
 
+// For resetting the form after submission or when needed
+const resetForm = () => {
+  setDate(new Date().toISOString().slice(0, 10));
+  setServiceType("Sabbath Class");
+  setCustomServiceType("");
+  setRecordedBy("");
+  setCountedBy("");
+  setDonations([
+    { donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" },
+  ]);
+  setDepositSlip(null);
+  setErrorMsg(null);
+};
+
   return (
     <div style={{ position: "relative" }}>
+      <TrialBanner church={church} />
   {isLocked && (
     <div
       style={{
@@ -362,8 +378,27 @@ const handleExportCollections = async () => {
       </div>
     </div>
   )}
+    
     <form className="collection-form" onSubmit={handleSubmit}>
-      <h1>Weekly Collection Entry</h1> {/* to be checked for possible deletion */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Weekly Collection Entry</h1>
+
+        <button
+          type="button"
+          onClick={resetForm}
+          style={{
+            background: "#111827",
+            color: "#fff",
+            padding: "8px 14px",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "0.85rem",
+          }}
+        >
+          + New Collection / Reset Form
+        </button>
+  </div>
 
       <div className="form-group">
         <div className="form-row">

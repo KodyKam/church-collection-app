@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import TrialBanner from "@/components/TrialBanner";
 
 export default function CollectionsPage() {
   const [collections, setCollections] = useState<any[]>([]);
@@ -108,62 +109,7 @@ useEffect(() => {
   return (
     <div style={{ padding: "2rem" }}>
       {church?.subscription_status !== "active" && trialDaysLeft !== null && (
-  <div
-    style={{
-      marginBottom: "1.5rem",
-      padding: "1rem",
-      borderRadius: "10px",
-      background:
-        trialDaysLeft <= 2
-          ? "#fee2e2"
-          : trialDaysLeft <= 5
-          ? "#fef3c7"
-          : "#e0f2fe",
-      border:
-        trialDaysLeft <= 2
-          ? "1px solid #fecaca"
-          : trialDaysLeft <= 5
-          ? "1px solid #fde68a"
-          : "1px solid #bae6fd",
-    }}
-  >
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "0.75rem",
-      }}
-    >
-      <div>
-        <strong>
-          {trialDaysLeft > 0
-            ? `⏳ ${trialDaysLeft} day${trialDaysLeft <= 0 ? "#991b1b" : "s"} left in your trial`
-            : "⚠️ Your trial has expired"}
-        </strong>
-
-        <div style={{ fontSize: "0.9rem", marginTop: "4px" }}>
-          Upgrade to continue using Tithr without interruption.
-        </div>
-      </div>
-
-      <button
-        onClick={() => router.push("/billing")}
-        style={{
-          background: trialDaysLeft <= 0 ? "#991b1b" : "#2563eb",
-          color: "#fff",
-          padding: "8px 14px",
-          borderRadius: "8px",
-          border: "none",
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        Upgrade
-      </button>
-    </div>
-  </div>
+    <TrialBanner church={church} />
 )}
       {/* HEADER */}
       <div style={{ marginBottom: "1.5rem" }}>

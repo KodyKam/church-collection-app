@@ -13,7 +13,16 @@ export default function LayoutWrapper({ church, children }: any) {
   return (
     <>
       {!isAuthPage && <Navbar church={church} />}
-      {children}
+
+      <div
+        style={{
+          padding: "2rem",
+          maxWidth: "1100px",
+          margin: "0 auto",
+        }}
+      >
+        {children}
+      </div>
     </>
   );
-}
+  }

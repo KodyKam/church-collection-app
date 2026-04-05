@@ -1,5 +1,5 @@
-// app/page.tsx
-import CollectionForm from "../../components/CollectionForm";
+// app/(protected)/page.tsx
+import CollectionForm from "../../../components/CollectionForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {

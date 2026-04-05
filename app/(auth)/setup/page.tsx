@@ -69,7 +69,7 @@ export default function SetupPage() {
       return;
     }
 
-    router.push("/");
+    router.push("/app");
   };
 
   return (
