@@ -5,16 +5,6 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
-// export const metadata = { redacted because metadata can't be export from "use client" components
-//   title: "Login – Tithr",
-//   description: "Login to your Tithr account",
-//   openGraph: {
-//     title: "Tithr Login",
-//     description: "Access your church collection dashboard",
-//     images: ["/og-image.png"],
-//   },
-// };
-
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

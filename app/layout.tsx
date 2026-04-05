@@ -35,7 +35,7 @@ export const metadata = {
     siteName: "Tithr",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://tithr.ca/og-image.png",
         width: 1200,
         height: 630,
       },
@@ -49,7 +49,7 @@ export const metadata = {
     title: "Tithr – Church Collection Management",
     description:
       "Track, manage, and report church offerings with ease.",
-    images: ["/og-image.png"],
+    images: ["https://tithr.ca/og-image.png"],
   },
 
   robots: {
