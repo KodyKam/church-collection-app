@@ -25,7 +25,7 @@ export const metadata = {
   },
 
   description:
-    "Tithr helps churches track offerings, manage collections, and generate reports with ease.",
+    "Track offerings, manage collections, and generate reports with ease.",
 
   openGraph: {
     title: "Tithr – Church Collection Management",
