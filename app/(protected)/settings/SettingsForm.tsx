@@ -242,7 +242,7 @@ export default function SettingsForm() {
           }}
         >
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/app")}
             style={{
               padding: "8px 14px",
               borderRadius: "6px",
