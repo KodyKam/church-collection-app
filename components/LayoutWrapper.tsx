@@ -23,6 +23,18 @@ export default function LayoutWrapper({ church, children }: any) {
       >
         {children}
       </div>
+      {/* FOOTER */}
+      {!isAuthPage && (
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: "0.85rem",
+            color: "#9ca3af",
+          }}
+        >
+          © {new Date().getFullYear()} Tithr - All rights reserved.
+        </div>
+        )}
     </>
   );
   }

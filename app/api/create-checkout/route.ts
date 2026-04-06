@@ -47,11 +47,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
+    let customerId = church.stripe_customer_id;
+
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email!,
+        metadata: {
+          user_id: user.id,
+        },
+      });
+
+      customerId = customer.id;
+
+      // save to DB
+      await supabase
+        .from("church_settings")
+        .update({ stripe_customer_id: customerId })
+        .eq("user_id", user.id);
+    }
     // ✅ Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
 
-      customer_email: church.email || undefined,
+      customer: customerId,
 
       line_items: [
         {
@@ -63,9 +81,11 @@ export async function POST(req: Request) {
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing`,
 
-      metadata: {
-        user_id: user.id,
-      },
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+        }
+      }
     });
 
     return NextResponse.json({ url: session.url });

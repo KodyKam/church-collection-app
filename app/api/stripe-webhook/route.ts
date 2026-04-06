@@ -61,18 +61,72 @@ export async function POST(req: Request) {
       const subscriptionId = session.subscription as string;
 
       if (!userId) {
-        throw new Error("Missing user_id in metadata");
+        console.error("❌ Missing user_id in checkout session");
+        return NextResponse.json({ received: true });
       }
 
       console.log("💰 Activating user:", userId);
 
-      await supabase
+      const { error } = await supabase
         .from("church_settings")
         .update({
           subscription_status: "active",
           stripe_subscription_id: subscriptionId,
         })
         .eq("user_id", userId);
+        
+      if (error) {
+        console.error("DB update failed:", error.message);
+      }
+    }
+
+    // =========================
+    // ✅ SUBSCRIPTION CREATED (SOURCE OF TRUTH)
+    // =========================
+    if (event.type === "customer.subscription.created") {
+      const subscription = event.data.object as Stripe.Subscription;
+
+      const userId = subscription.metadata?.user_id;
+
+      if (!userId) {
+        console.warn("⚠️ Missing user_id in subscription metadata");
+      } else {
+        console.log("✅ Subscription created for:", userId);
+
+        const { error } = await supabase
+  .from("church_settings")
+  .update({
+    subscription_status: "active",
+    stripe_subscription_id: subscription.id,
+  })
+  .eq("user_id", userId);
+
+if (error) {
+  console.error("DB update failed:", error.message);
+}
+      }
+    }
+
+    // =========================
+    // 🔄 SUBSCRIPTION UPDATED
+    // =========================
+    if (event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+
+      const status = subscription.status;
+
+      console.log("🔄 Subscription updated:", status);
+
+      const { error } = await supabase
+        .from("church_settings")
+        .update({
+          subscription_status: status === "active" ? "active" : "inactive",
+        })
+        .eq("stripe_subscription_id", subscription.id);
+
+      if (error) {
+        console.error("DB update failed:", error.message);
+      }
     }
 
     // =========================
@@ -83,12 +137,16 @@ export async function POST(req: Request) {
 
       console.log("❌ Canceling subscription:", subscription.id);
 
-      await supabase
+      const { error } = await supabase
         .from("church_settings")
         .update({
           subscription_status: "canceled",
         })
         .eq("stripe_subscription_id", subscription.id);
+
+        if (error) {
+          console.error("DB cancel failed:", error.message);
+        }
     }
 
     return NextResponse.json({ received: true });
