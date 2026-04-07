@@ -94,16 +94,16 @@ export async function POST(req: Request) {
         console.log("✅ Subscription created for:", userId);
 
         const { error } = await supabase
-  .from("church_settings")
-  .update({
-    subscription_status: "active",
-    stripe_subscription_id: subscription.id,
-  })
-  .eq("user_id", userId);
+          .from("church_settings")
+          .update({
+            subscription_status: "active",
+            stripe_subscription_id: subscription.id,
+          })
+          .eq("user_id", userId);
 
-if (error) {
-  console.error("DB update failed:", error.message);
-}
+        if (error) {
+          console.error("DB update failed:", error.message);
+        }
       }
     }
 

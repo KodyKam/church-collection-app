@@ -108,6 +108,10 @@ export default function SettingsForm() {
 
   return (
     <div
+  onClick={() => console.log("PAGE CLICKED")}
+  style={{ minHeight: "100vh" }}
+>
+    <div
       style={{
         minHeight: "100vh",
         background: "#f9fafb",
@@ -270,6 +274,37 @@ export default function SettingsForm() {
           </button>
         </div>
 
+        <button
+          onClick={async () => {
+            console.log("CLICKED"); // debugging
+            const res = await fetch("/api/customer-portal", {
+              method: "POST",
+            });
+
+            const data = await res.json();
+
+            console.log("PORTAL RESPONSE:", data); // debugging
+
+            if (data.url) {
+              window.location.href = data.url;
+            } else {
+              alert("Unable to open billing portal");
+            }
+          }}
+          style={{
+            marginTop: "1rem",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            border: "none",
+            background: "#111827",
+            color: "#fff",
+            width: "100%",
+            fontWeight: 600,
+          }}
+        >
+          Manage Subscription
+        </button>
+
         {/* 🔥 DANGER ZONE */}
         <div style={{ marginTop: "2.5rem" }}>
           <button
@@ -289,6 +324,7 @@ export default function SettingsForm() {
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }
