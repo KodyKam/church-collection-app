@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 
-const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
 
 const btn = {
   padding: "12px 18px",
@@ -17,6 +17,9 @@ const btn = {
 };
 
 export default function BillingPage() {
+  
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
   const handleUpgrade = async (plan: string) => {
   setLoadingPlan(plan);
 
