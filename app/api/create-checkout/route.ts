@@ -70,6 +70,12 @@ export async function POST(req: Request) {
         .update({ stripe_customer_id: customerId })
         .eq("user_id", user.id);
     }
+    // Log all relevant info before creating checkout
+    console.log("🧾 Creating checkout with:");
+    console.log("customerId:", customerId);
+    console.log("priceId:", priceId);
+    console.log("siteUrl:", process.env.NEXT_PUBLIC_SITE_URL);
+
     // ✅ Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -94,8 +100,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (err) {
-    console.error("STRIPE ERROR:", err);
+  } catch (err: any) {
+    console.error("STRIPE ERROR FULL:", err);
+
+     console.error("❌ STRIPE ERROR MESSAGE:", err?.message); 
+     console.error("❌ STRIPE ERROR TYPE:", err?.type);
+     console.error("❌ STRIPE ERROR RAW:", err?.raw);
+
     return NextResponse.json({ error: "Stripe failed" }, { status: 500 });
   }
 }
