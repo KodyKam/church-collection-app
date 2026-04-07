@@ -43,6 +43,11 @@ export async function POST(req: Request) {
       priceId = process.env.STRIPE_PRICE_YEARLY;
     }
 
+    console.log("PLAN:", plan);
+    console.log("ENV MONTHLY:", process.env.STRIPE_PRICE_MONTHLY);
+    console.log("ENV QUARTERLY:", process.env.STRIPE_PRICE_QUARTERLY);
+    console.log("ENV YEARLY:", process.env.STRIPE_PRICE_YEARLY);
+
     if (!priceId) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
