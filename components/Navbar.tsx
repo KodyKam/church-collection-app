@@ -10,7 +10,7 @@ export default function Navbar({ church }: any) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.push("/");
     router.refresh();
   };
 
