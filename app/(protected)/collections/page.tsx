@@ -111,6 +111,7 @@ useEffect(() => {
       {church?.subscription_status !== "active" && trialDaysLeft !== null && (
     <TrialBanner church={church} />
 )}
+<p style={{ fontSize: "0.8rem", color: "#fff", backgroundColor: "#ff0000", width: "fit-content", borderRadius: "6px", margin: "0 auto", padding: "4px 12px" }}>Still Under Development - Launching Soon</p>
       {/* HEADER */}
       <div style={{ marginBottom: "1.5rem" }}>
         <h1 style={{ fontSize: "1.6rem", fontWeight: 600 }}>
