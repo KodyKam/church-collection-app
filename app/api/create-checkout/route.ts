@@ -54,6 +54,15 @@ export async function POST(req: Request) {
 
     let customerId = church.stripe_customer_id;
 
+    if (customerId) {
+      try {
+        await stripe.customers.retrieve(customerId);
+      } catch {
+        console.log("⚠️ Customer ID invalid, creating new customer");
+        customerId = null;
+      }
+    }
+
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email!,
@@ -75,6 +84,14 @@ export async function POST(req: Request) {
     console.log("customerId:", customerId);
     console.log("priceId:", priceId);
     console.log("siteUrl:", process.env.NEXT_PUBLIC_SITE_URL);
+
+    // 
+    const priceCheck = await stripe.prices.retrieve(priceId);
+    console.log("Price exists:", priceCheck.id); 
+
+    // Debug Stripe account connection to ensure correct account is being used
+    const account = await stripe.accounts.retrieve();
+    console.log("STRIPE ACCOUNT:", account.id);
 
     // ✅ Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
@@ -106,6 +123,8 @@ export async function POST(req: Request) {
      console.error("❌ STRIPE ERROR MESSAGE:", err?.message); 
      console.error("❌ STRIPE ERROR TYPE:", err?.type);
      console.error("❌ STRIPE ERROR RAW:", err?.raw);
+     const account = await stripe.accounts.retrieve();
+console.log("STRIPE ACCOUNT:", account.id);
 
     return NextResponse.json({ error: "Stripe failed" }, { status: 500 });
   }
