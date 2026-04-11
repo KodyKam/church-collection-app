@@ -56,14 +56,11 @@ export async function POST(req: Request) {
 
     if (customerId) {
       try {
-        await stripe.customers.retrieve(customerId);
-      } catch {
-        console.log("⚠️ Customer ID invalid, creating new customer");
-        customerId = null;
-      }
-    }
+      // ✅ Check if customer actually exists in Stripe
+      await stripe.customers.retrieve(customerId);
+    } catch (err) {
+      console.log("⚠️ Invalid customer, recreating...");
 
-    if (!customerId) {
       const customer = await stripe.customers.create({
         email: user.email!,
         metadata: {
@@ -73,12 +70,27 @@ export async function POST(req: Request) {
 
       customerId = customer.id;
 
-      // save to DB
       await supabase
         .from("church_settings")
         .update({ stripe_customer_id: customerId })
         .eq("user_id", user.id);
     }
+  } else {
+    // ✅ No customer at all → create new
+    const customer = await stripe.customers.create({
+      email: user.email!,
+      metadata: {
+        user_id: user.id,
+      },
+    });
+
+    customerId = customer.id;
+
+    await supabase
+      .from("church_settings")
+      .update({ stripe_customer_id: customerId })
+      .eq("user_id", user.id);
+  }
     // Log all relevant info before creating checkout
     console.log("🧾 Creating checkout with:");
     console.log("customerId:", customerId);
