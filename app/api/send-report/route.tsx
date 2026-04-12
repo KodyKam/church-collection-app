@@ -79,7 +79,7 @@ const pdfBase64 = pdfBuffer.toString("base64");
         : church?.email;
 
     const result = await resend.emails.send({
-      from: "Tithr <onboarding@resend.dev>", // <noreply@notify.tithr.ca>", // Branded sender for better deliverability
+      from: "Tithr <noreply@notify.tithr.ca>", // <noreply@notify.tithr.ca>", // Branded sender for better deliverability
       to: [recipient], // Each church only receives THEIR reports
       subject: `Offerings Report - ${collection.date}`,
       html: htmlBody,
