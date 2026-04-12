@@ -57,7 +57,9 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      const userId = session.metadata?.user_id;
+      const userId =
+        session.metadata?.user_id || // prefer metadata user_id
+        session.client_reference_id; // fallback to client_reference_id for older sessions without metadata
       const subscriptionId = session.subscription as string;
 
       if (!userId) {

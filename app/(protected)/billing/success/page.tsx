@@ -8,51 +8,37 @@ export default function SuccessPage() {
   const router = useRouter();
 
   // 🔥 Auto redirect after a few seconds
+
   useEffect(() => {
     const init = async () => {
       try {
-        // 🔥 Force session refresh
+        // 🔄 Refresh session first
         await fetch("/api/refresh-session");
-      } catch (err) {
-        console.error("Session refresh failed", err);
-      }
 
-      // ⏳ Give webhook time to update DB
-      setTimeout(() => {
-        router.push("/");
-      }, 2500);
+        // 🔁 Poll subscription status
+        for (let i = 0; i < 6; i++) {
+          const res = await fetch("/api/check-subscription");
+          const data = await res.json();
+
+          if (data.active) {
+            router.push("/app"); // ✅ go to dashboard
+            return;
+          }
+
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+
+        // ⚠️ fallback if webhook slow
+        router.push("/app");
+
+      } catch (err) {
+        console.error("Activation failed:", err);
+        router.push("/app");
+      }
     };
 
     init();
   }, [router]);
-
-  useEffect(() => {
-  const checkSubscription = async () => {
-    try {
-      // 🔄 Try up to 6 times (6 seconds max)
-      for (let i = 0; i < 6; i++) {
-        const res = await fetch("/api/check-subscription");
-        const data = await res.json();
-
-        if (data.active) {
-          router.push("/");
-          return;
-        }
-
-        // wait 1 second before retry
-        await new Promise((r) => setTimeout(r, 1000));
-      }
-
-      // fallback (still redirect anyway)
-      router.push("/");
-    } catch (err) {
-      console.error("Polling failed:", err);
-      router.push("/");
-    }
-  };
-
-  checkSubscription();
-}, [router]);
 
   return (
     <div
@@ -91,7 +77,7 @@ export default function SuccessPage() {
 
       {/* 🚀 CTA */}
       <button
-        onClick={() => router.push("/")}
+        onClick={() => router.push("/app")}
         style={{
           padding: "12px 18px",
           borderRadius: "10px",
