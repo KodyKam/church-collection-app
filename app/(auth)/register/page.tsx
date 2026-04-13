@@ -11,21 +11,46 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const handleRegister = async () => {
-    const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: "https://tithr.ca/login", // you can keep or remove later
+    },
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const user = data.user;
+
+  if (!user) {
+    alert("Something went wrong");
+    return;
+  }
+
+  // 🔥 SEND YOUR CUSTOM EMAIL
+  await fetch("/api/send-welcome-email", {
+    method: "POST",
+    body: JSON.stringify({
       email,
-      password,
-    });
+      userId: user.id,
+    }),
+  });
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    alert("Account created! Please log in.");
-
-    // 👉 send to login (NOT home)
+  // 🚨 HANDLE UNCONFIRMED USERS (expected case)
+  if (!data.session) {
+    alert("Check your email to confirm your account");
     router.push("/login");
-  };
+    return;
+  }
+
+  // fallback (rare)
+  alert("Account created!");
+  router.push("/login");
+};
 
   return (
     <div className="auth-container">

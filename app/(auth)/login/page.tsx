@@ -11,7 +11,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleLogin = async () => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -21,12 +21,20 @@ export default function LoginPage() {
       return;
     }
 
-    // ✅ Check if church exists
+    const user = data.user;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // 🚨 BLOCK unverified users
+    if (user && !user.email_confirmed_at) {
+
+      alert("Please confirm your email before logging in.");
     
+      // 🔥 OPTIONAL: force logout so no session lingers
+      await supabase.auth.signOut();
+
+      return;
+    }
+
+    // ✅ Check if church exists
     const { data: church } = await supabase
       .from("church_settings")
       .select("*")
@@ -34,7 +42,7 @@ export default function LoginPage() {
       .single();
 
     if (!church) {
-      router.push("/setup"); // 👈 FIRST TIME USERS
+      router.push("/setup"); // first-time users
     } else {
       router.push("/app"); // returning users
     }

@@ -22,6 +22,11 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
+  // 🚨 BLOCK unverified users
+  if (!user.email_confirmed_at) {
+    redirect("/login");
+  }
+
   const church = await getChurchSettings();
   if (
   church.subscription_status !== "active" &&
