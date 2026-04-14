@@ -1,3 +1,4 @@
+// app/api/customer-portal/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createServerSupabaseClient } from "@/lib/supabaseServer";
@@ -18,30 +19,22 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // get church
+    // ✅ get customer directly
     const { data: church } = await supabase
       .from("church_settings")
-      .select("stripe_subscription_id")
+      .select("stripe_customer_id")
       .eq("user_id", user.id)
       .single();
 
-    if (!church?.stripe_subscription_id) {
+    if (!church?.stripe_customer_id) {
       return NextResponse.json(
-        { error: "No subscription found" },
+        { error: "No customer found" },
         { status: 400 }
       );
     }
 
-    // 🔥 get subscription from Stripe
-    const subscription = await stripe.subscriptions.retrieve(
-      church.stripe_subscription_id
-    );
-
-    const customerId = subscription.customer as string;
-
-    // ✅ create portal session
     const portalSession = await stripe.billingPortal.sessions.create({
-      customer: customerId,
+      customer: church.stripe_customer_id,
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/settings`,
     });
 

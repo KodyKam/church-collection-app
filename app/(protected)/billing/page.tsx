@@ -1,9 +1,7 @@
 // app/(protected)/billing/page.tsx
 "use client";
 
-import { useState } from "react";
-
-
+import { useEffect, useState } from "react";
 
 const btn = {
   padding: "12px 18px",
@@ -17,90 +15,153 @@ const btn = {
 };
 
 export default function BillingPage() {
-  
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [status, setStatus] = useState<"loading" | "active" | "trialing" | "expired">("loading");
+
+  // 🔥 Fetch subscription status
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await fetch("/api/check-subscription");
+        const data = await res.json();
+
+        if (data.status === "active") setStatus("active");
+        else if (data.status === "trialing") setStatus("trialing");
+        else setStatus("expired");
+      } catch {
+        setStatus("expired");
+      }
+    };
+
+    fetchStatus();
+  }, []);
 
   const handleUpgrade = async (plan: string) => {
-  setLoadingPlan(plan);
+    setLoadingPlan(plan);
 
-  try {
-    const res = await fetch("/api/create-checkout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ plan }),
-    });
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert("Something went wrong. Try again.");
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Something went wrong. Try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to start checkout.");
+    } finally {
+      setLoadingPlan(null);
     }
-  } catch (err) {
-    console.error(err);
-    alert("Failed to start checkout.");
-  } finally {
-    setLoadingPlan(null);
-  }
-};
+  };
+
+  const openPortal = async () => {
+    try {
+      const res = await fetch("/api/customer-portal", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert("Unable to open billing portal.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error opening portal.");
+    }
+  };
 
   return (
     <div style={{ padding: "2rem", textAlign: "center" }}>
-      <h1>Unlock Tithr</h1>
-      <p>Continue managing your church collections without interruption.</p>
-      <p>Your trial has ended. Subscribe to continue using Tithr.</p>
+      <h1>Billing</h1>
 
-      <div style={{ marginTop: "2rem", display: "flex", flexDirection: "column", gap: "1rem", alignItems: "center" }}>
+      {/* 🔥 STATUS DISPLAY */}
+      {status === "loading" && <p>Loading subscription...</p>}
 
-        <button
-          onClick={() => handleUpgrade("monthly")}
-          style={btn}
-          disabled={loadingPlan !== null}
-        >
-          {loadingPlan === "monthly" ? "Redirecting..." : "$19 / month"}
-        </button>
+      {status === "active" && (
+        <>
+          <p style={{ color: "#16a34a", fontWeight: 600 }}>
+            ✅ Your subscription is active
+          </p>
 
-        <button
-          onClick={() => handleUpgrade("quarterly")}
-          style={btn}
-          disabled={loadingPlan !== null}
-        >
-          {loadingPlan === "quarterly" ? "Redirecting..." : "$49 / quarter"}
-        </button>
+          <button onClick={openPortal} style={{ ...btn, marginTop: "1rem" }}>
+            Manage Subscription
+          </button>
+        </>
+      )}
 
-        <button
-          onClick={() => handleUpgrade("yearly")}
-          style={{...btn, background: "#16a34a", boxShadow: "0 4px 14px rgba(22,163,74,0.4)", transform: "scale(1.05)", cursor: loadingPlan ? "not-allowed" : "pointer", opacity: loadingPlan ? 0.7 : 1, }}
-          disabled={loadingPlan !== null}
-        >
-          {loadingPlan === "yearly" ? "Redirecting..." : "$189 / year"}
-        </button>
+      {status === "trialing" && (
+        <p style={{ color: "#f59e0b", fontWeight: 600 }}>
+          ⏳ You are currently on a free trial
+        </p>
+      )}
 
-      </div>
+      {status === "expired" && (
+        <p style={{ color: "#dc2626", fontWeight: 600 }}>
+          ❌ Your trial has expired
+        </p>
+      )}
+
+      {/* 🔥 UPGRADE OPTIONS */}
+      {status !== "active" && (
+        <>
+          <h2 style={{ marginTop: "2rem" }}>Upgrade</h2>
+
+          <div
+            style={{
+              marginTop: "2rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+              alignItems: "center",
+            }}
+          >
+            <button
+              onClick={() => handleUpgrade("monthly")}
+              style={btn}
+              disabled={loadingPlan !== null}
+            >
+              {loadingPlan === "monthly" ? "Redirecting..." : "$19 / month"}
+            </button>
+
+            <button
+              onClick={() => handleUpgrade("quarterly")}
+              style={btn}
+              disabled={loadingPlan !== null}
+            >
+              {loadingPlan === "quarterly" ? "Redirecting..." : "$49 / quarter"}
+            </button>
+
+            <button
+              onClick={() => handleUpgrade("yearly")}
+              style={{
+                ...btn,
+                background: "#16a34a",
+                boxShadow: "0 4px 14px rgba(22,163,74,0.4)",
+                transform: "scale(1.05)",
+              }}
+              disabled={loadingPlan !== null}
+            >
+              {loadingPlan === "yearly" ? "Redirecting..." : "$189 / year"}
+            </button>
+          </div>
+        </>
+      )}
 
       <p style={{ marginTop: "1rem", fontSize: "0.9rem", color: "#6b7280" }}>
         Secure payments powered by Stripe. Cancel anytime.
       </p>
-
-      <button
-        onClick={async () => {
-          const res = await fetch("/api/cancel-subscription", {
-            method: "POST",
-          });
-
-          if (res.ok) {
-            alert("Subscription will cancel at end of billing period.");
-          } else {
-            alert("Failed to cancel subscription.");
-          }
-        }}
-        style={{ marginTop: "2rem" }}
-      >
-        Cancel Subscription
-      </button>
     </div>
   );
 }
