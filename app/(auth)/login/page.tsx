@@ -12,37 +12,45 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password,
-});
+      email,
+      password,
+    });
 
-if (error) {
-  alert(error.message);
-  return;
-}
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-// 🔥 ALWAYS REFRESH USER
-const { data: refreshed } = await supabase.auth.getUser();
+    // 🔥 ALWAYS REFRESH USER
+    const { data: refreshed } = await supabase.auth.getUser();
 
-if (!refreshed.user?.email_confirmed_at) {
-  alert("Please confirm your email before logging in.");
-  await supabase.auth.signOut();
-  return;
-}
+    const user = refreshed.user; // ✅ FIX
+
+    if (!user) {
+      alert("Login failed. Try again.");
+      return;
+    }
+
+    // 🚨 BLOCK unverified users
+    if (!user.email_confirmed_at) {
+      alert("Please confirm your email before logging in.");
+      await supabase.auth.signOut();
+      return;
+    }
 
     // ✅ Check if church exists
     const { data: church } = await supabase
       .from("church_settings")
       .select("*")
-      .eq("user_id", user?.id)
+      .eq("user_id", user.id) // ✅ now safe
       .single();
 
     if (!church) {
-      router.push("/setup"); // first-time users
-    } else {
-      router.push("/app"); // returning users
-    }
-  };
+    router.push("/setup");
+  } else {
+    router.push("/app");
+  }
+};
 
   return (
     <div className="auth-container">

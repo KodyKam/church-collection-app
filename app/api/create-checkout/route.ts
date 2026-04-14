@@ -121,6 +121,15 @@ export async function POST(req: Request) {
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing`,
 
+      client_reference_id: user.id, // NEW - attach user ID for easier tracking
+
+      // STRIPE COUPON BLOCK IF EVER NEEDED
+      discounts: [ // 100% OFF Tithr Coupon for Stripe payment testing
+        {
+          coupon: "fSdDPsd2", // Will keep for future reference/possibilities
+        },
+      ],
+
       subscription_data: {
         metadata: {
           user_id: user.id,

@@ -57,13 +57,22 @@ export async function POST(req: Request) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      const userId =
-        session.metadata?.user_id || // prefer metadata user_id
-        session.client_reference_id; // fallback to client_reference_id for older sessions without metadata
       const subscriptionId = session.subscription as string;
 
+      console.log("🧾 Checkout completed. Subscription:", subscriptionId);
+
+      if (!subscriptionId) {
+        console.error("❌ No subscription ID found");
+        return NextResponse.json({ received: true });
+      }
+
+      // 🔥 Retrieve FULL subscription to access metadata
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+      const userId = subscription.metadata?.user_id;
+
       if (!userId) {
-        console.error("❌ Missing user_id in checkout session");
+        console.error("❌ Missing user_id in subscription metadata");
         return NextResponse.json({ received: true });
       }
 
@@ -73,10 +82,10 @@ export async function POST(req: Request) {
         .from("church_settings")
         .update({
           subscription_status: "active",
-          stripe_subscription_id: subscriptionId,
+          stripe_subscription_id: subscription.id,
         })
         .eq("user_id", userId);
-        
+
       if (error) {
         console.error("DB update failed:", error.message);
       }
@@ -93,7 +102,7 @@ export async function POST(req: Request) {
       if (!userId) {
         console.warn("⚠️ Missing user_id in subscription metadata");
       } else {
-        console.log("✅ Subscription created for:", userId);
+        console.log("✅ (Backup) Subscription created for:", userId);
 
         const { error } = await supabase
           .from("church_settings")
