@@ -12,27 +12,23 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  email,
+  password,
+});
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+if (error) {
+  alert(error.message);
+  return;
+}
 
-    const user = data.user;
+// 🔥 ALWAYS REFRESH USER
+const { data: refreshed } = await supabase.auth.getUser();
 
-    // 🚨 BLOCK unverified users
-    if (user && !user.email_confirmed_at) {
-
-      alert("Please confirm your email before logging in.");
-    
-      // 🔥 OPTIONAL: force logout so no session lingers
-      await supabase.auth.signOut();
-
-      return;
-    }
+if (!refreshed.user?.email_confirmed_at) {
+  alert("Please confirm your email before logging in.");
+  await supabase.auth.signOut();
+  return;
+}
 
     // ✅ Check if church exists
     const { data: church } = await supabase

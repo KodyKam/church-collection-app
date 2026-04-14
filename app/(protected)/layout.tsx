@@ -18,7 +18,7 @@ export default async function ProtectedLayout({
   } = await supabase.auth.getUser();
 
   // 🔐 Only protect THESE routes
-  if (!user) {
+  if (!user || !user.email_confirmed_at) {
     redirect("/login");
   }
 

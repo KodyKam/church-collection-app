@@ -14,9 +14,6 @@ export default function RegisterPage() {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      emailRedirectTo: "https://tithr.ca/login", // you can keep or remove later
-    },
   });
 
   if (error) {
@@ -31,8 +28,8 @@ export default function RegisterPage() {
     return;
   }
 
-  // 🔥 SEND YOUR CUSTOM EMAIL
-  await fetch("/api/send-welcome-email", {
+  // 🔥 send welcome email
+  const res = await fetch("/api/send-welcome-email", {
     method: "POST",
     body: JSON.stringify({
       email,
@@ -40,15 +37,12 @@ export default function RegisterPage() {
     }),
   });
 
-  // 🚨 HANDLE UNCONFIRMED USERS (expected case)
-  if (!data.session) {
-    alert("Check your email to confirm your account");
-    router.push("/login");
-    return;
-  }
+  console.log("EMAIL API STATUS:", res.status);
 
-  // fallback (rare)
-  alert("Account created!");
+  // 🚨 force logout so user cannot proceed
+  await supabase.auth.signOut();
+
+  alert("Check your email to confirm your account");
   router.push("/login");
 };
 

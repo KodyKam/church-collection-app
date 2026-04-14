@@ -1,25 +1,34 @@
 // app/verify/page.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 export default function VerifyPage() {
   const params = useSearchParams();
   const router = useRouter();
+  const hasRun = useRef(false); // prevents double execution
 
   useEffect(() => {
     const verify = async () => {
-      const userId = params.get("user");
+      if (hasRun.current) return;
+      hasRun.current = true;
 
-      if (!userId) {
+      const token = params.get("token");
+
+      console.log("VERIFY TOKEN:", token);
+
+      if (!token) {
         alert("Invalid verification link");
         return;
       }
 
       const res = await fetch("/api/verify-user", {
         method: "POST",
-        body: JSON.stringify({ userId }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
       });
 
       if (!res.ok) {
@@ -31,7 +40,7 @@ export default function VerifyPage() {
       router.push("/login");
     };
 
-    verify();
+    setTimeout(verify, 100);
   }, [params, router]);
 
   return <p style={{ padding: "2rem" }}>Verifying your email...</p>;
