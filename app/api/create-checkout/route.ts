@@ -118,6 +118,8 @@ export async function POST(req: Request) {
         },
       ],
 
+      allow_promotion_codes: true,
+
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/billing`,
 
@@ -129,6 +131,7 @@ export async function POST(req: Request) {
       //     coupon: "fSdDPsd2", // Will keep for future reference/possibilities
       //   },
       // ],
+      
 
       subscription_data: {
         metadata: {
