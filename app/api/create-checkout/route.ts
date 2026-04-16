@@ -124,11 +124,11 @@ export async function POST(req: Request) {
       client_reference_id: user.id, // NEW - attach user ID for easier tracking
 
       // STRIPE COUPON BLOCK IF EVER NEEDED
-      discounts: [ // 100% OFF Tithr Coupon for Stripe payment testing
-        {
-          coupon: "fSdDPsd2", // Will keep for future reference/possibilities
-        },
-      ],
+      // discounts: [ // 100% OFF Tithr Coupon for Stripe payment testing
+      //   {
+      //     coupon: "fSdDPsd2", // Will keep for future reference/possibilities
+      //   },
+      // ],
 
       subscription_data: {
         metadata: {
