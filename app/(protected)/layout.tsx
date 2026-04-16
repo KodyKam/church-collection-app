@@ -17,23 +17,24 @@ export default async function ProtectedLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 🔐 Only protect THESE routes
+  // 🔐 Auth guard
   if (!user || !user.email_confirmed_at) {
     redirect("/login");
   }
 
-  // 🚨 BLOCK unverified users
-  if (!user.email_confirmed_at) {
-    redirect("/login");
+  const church = await getChurchSettings();
+
+  // 🚨 SAFETY: handle missing church
+  if (!church) {
+    redirect("/setup");
   }
 
-  const church = await getChurchSettings();
-  if (
-  church.subscription_status !== "active" &&
-  new Date(church.trial_ends_at) < new Date()
-) {
-  redirect("/billing");
-}
+  const isExpired =
+    church.subscription_status !== "active" &&
+    new Date(church.trial_ends_at) < new Date();
+
+  // ❌ DO NOT redirect here anymore
+  // 👉 Let pages decide
 
   return <LayoutWrapper church={church}>{children}</LayoutWrapper>;
 }

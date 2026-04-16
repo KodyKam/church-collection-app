@@ -73,10 +73,11 @@ const pdfBase64 = pdfBuffer.toString("base64");
     if (!church?.email) {
       throw new Error("No destination email configured");
     }
-    const recipient = // fallback logic to guarantee each church only receives THEIR reports
-      process.env.NODE_ENV === "development" // No cross-tenant leaks
-        ? "bigachiever@icloud.com"           // Clean billing-ready architecture
-        : church?.email;
+    // const recipient = // fallback logic to guarantee each church only receives THEIR reports
+    //   process.env.NODE_ENV === "development" // No cross-tenant leaks
+    //     ? "bigachiever@icloud.com"           // Clean billing-ready architecture
+    //     : church?.email; // redacted to remove dev override fallback
+    const recipient = church.email;
 
     const result = await resend.emails.send({
       from: "Tithr <noreply@notify.tithr.ca>", // <noreply@notify.tithr.ca>", // Branded sender for better deliverability
@@ -92,6 +93,8 @@ const pdfBase64 = pdfBuffer.toString("base64");
       ],
     });
 
+    console.log("FINAL RECIPIENT:", recipient);
+    console.log("📧 Sending to:", church.email); // debug log
     console.log("📨 Email result:", result);
 
     if (!recipient) {

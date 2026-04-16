@@ -55,10 +55,10 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
   const handleSendEmail = async () => {
     setIsSendingEmail(true);
 
-    if (!church?.email) {
-      alert("Please set a report email in Settings first.");
-      return;
-    }
+    // if (!church?.email) { // Not trusting frontend validation for critical config - API route will also check and fail safely if missing
+    //   alert("Please set a report email in Settings first.");
+    //   return;
+    // }
 
     try {
       const res = await fetch("/api/send-report", {

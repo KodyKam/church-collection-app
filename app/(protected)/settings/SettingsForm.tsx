@@ -66,7 +66,7 @@ export default function SettingsForm() {
       if (!res.ok) throw new Error("Update failed");
 
       toast.success("Settings updated!");
-      router.replace("/"); // 👈 return to main app
+      router.replace("/app"); // 👈 return to main app
       router.refresh(); // to ensure that navbar updates instantly with new info
     } catch (err: any) {
       console.error(err);
@@ -94,7 +94,7 @@ export default function SettingsForm() {
 
     // alert("Account deleted"); deprecated for better UX - redirect to homepage - logged out state
 
-    router.push("/register"); // or homepage
+    router.push("/"); // or homepage
     router.refresh();
   } catch (err) {
     console.error(err);
