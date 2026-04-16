@@ -79,13 +79,12 @@ export default function LoginPage() {
         <p style={{ color: "#fff" }}>
           No account?{" "}
           <span
-            style={{ textDecoration: "underline", cursor: "pointer" }}
+            style={{ textDecoration: "underline", fontWeight: "bold", cursor: "pointer" }}
             onClick={() => router.push("/register")}
           >
             Start free trial
           </span>
         </p>
-        <p style={{ fontSize: "0.8rem", color: "#fff", backgroundColor: "#ff0000", width: "fit-content", borderRadius: "6px", margin: "0 auto", padding: "4px 12px" }}>Still Under Development - Log in And Explore</p>
       </div>
     </div>
   );

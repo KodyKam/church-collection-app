@@ -111,7 +111,6 @@ export default function SettingsForm() {
   onClick={() => console.log("PAGE CLICKED")} // debugging
   style={{ minHeight: "100vh" }}
 >
-  <p style={{ fontSize: "0.8rem", color: "#fff", backgroundColor: "#ff0000", width: "fit-content", borderRadius: "6px", margin: "0 auto", padding: "4px 12px" }}>Still Under Development - Launching Soon</p>
     <div
       style={{
         minHeight: "100vh",
