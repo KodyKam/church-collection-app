@@ -82,76 +82,88 @@ export default function HomePage() {
         </div>
 
         {/* HERO */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: "3rem",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "2.4rem",
-              fontWeight: 700,
-              color: "#111827",
-            }}
-          >
-            Church Collection Management Made Simple
-          </h1>
+<div
+  style={{
+    textAlign: "center",
+    marginBottom: "3rem",
+  }}
+>
+  <h1
+    style={{
+      fontSize: "2.6rem",
+      fontWeight: 800,
+      color: "#111827",
+      lineHeight: "1.2",
+    }}
+  >
+    Stop Stressing Over Church Offerings
+  </h1>
 
-          <p
-            style={{
-              marginTop: "1rem",
-              fontSize: "1.1rem",
-              color: "#6b7280",
-              maxWidth: "600px",
-              marginInline: "auto",
-            }}
-          >
-            Record offerings, upload deposit slips, and send professional
-            reports — all in one place.
-          </p>
+  <p
+    style={{
+      marginTop: "1rem",
+      fontSize: "1.15rem",
+      color: "#6b7280",
+      maxWidth: "620px",
+      marginInline: "auto",
+    }}
+  >
+    Record collections, avoid calculation mistakes, and send clean reports in minutes — not hours.
+  </p>
 
-          <div
-            style={{
-              marginTop: "2rem",
-              display: "flex",
-              justifyContent: "center",
-              gap: "1rem",
-              flexWrap: "wrap",
-            }}
-          >
-            <Link href="/register">
-              <button
-                style={{
-                  padding: "12px 18px",
-                  background: "#029c1b", // 👈 matches your app green
-                  color: "#fff",
-                  borderRadius: "8px",
-                  border: "none",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Start Free Trial
-              </button>
-            </Link>
+  {/* 🔥 LAUNCH OFFER */}
+  <p
+    style={{
+      marginTop: "0.75rem",
+      fontSize: "0.95rem",
+      color: "#16a34a",
+      fontWeight: 600,
+    }}
+  >
+    🎉 Launch Offer: 25% off your first 3 months with code <strong>LAUNCH25</strong>
+  </p>
 
-            <Link href="/login">
-              <button
-                style={{
-                  padding: "12px 18px",
-                  background: "#e5e7eb",
-                  borderRadius: "8px",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                Login
-              </button>
-            </Link>
-          </div>
-          
-        </div>
+  <div
+    style={{
+      marginTop: "2rem",
+      display: "flex",
+      justifyContent: "center",
+      gap: "1rem",
+      flexWrap: "wrap",
+    }}
+  >
+    <Link href="/register">
+      <button
+        style={{
+          padding: "14px 22px",
+          background: "#029c1b",
+          color: "#fff",
+          borderRadius: "10px",
+          border: "none",
+          fontWeight: 700,
+          cursor: "pointer",
+          fontSize: "1rem",
+        }}
+      >
+        Start Free Trial
+      </button>
+    </Link>
+
+    <Link href="/login">
+      <button
+        style={{
+          padding: "14px 22px",
+          background: "#e5e7eb",
+          borderRadius: "10px",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        Login
+      </button>
+    </Link>
+  </div>
+</div>
 
         {/* FEATURES */}
         <div
@@ -163,10 +175,10 @@ export default function HomePage() {
           }}
         >
           {[
-            "Record weekly collections with ease",
-            "Upload and store deposit slips securely",
-            "Generate clean PDF reports instantly",
-            "Email reports directly to your church",
+            "Keep every collection organized and easy to track",
+            "Eliminate manual counting and calculation mistakes",
+            "Generate professional reports instantly",
+            "Send reports to leadership with one click",
           ].map((text, i) => (
             <div
               key={i}
@@ -182,6 +194,20 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
+        {/* TRUST */}
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: "3rem",
+            color: "#374151",
+          }}
+        >
+          <p style={{ fontSize: "1rem", fontWeight: 500 }}>
+            Built from real church experience — designed to make offering management simple, clear, and trustworthy.
+          </p>
+        </div>
+        
         {/* PRICING */}
 <div
   style={{
@@ -208,6 +234,17 @@ export default function HomePage() {
       boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
     }}
   >
+    <div
+      style={{
+        fontSize: "0.8rem",
+        color: "#16a34a",
+        fontWeight: 600,
+        marginBottom: "0.25rem",
+      }}
+    >
+      🎉 25% OFF with code LAUNCH25
+    </div>
+
     <div style={{ fontSize: "0.9rem", color: "#6b7280" }}>
       Free Trial
     </div>

@@ -127,6 +127,9 @@ export default function BillingPage() {
               alignItems: "center",
             }}
           >
+            <p style={{ marginTop: "1rem", color: "#16a34a", fontWeight: 500 }}>
+              🎉 Launch Special: Use code <strong>LAUNCH26</strong> for 25% off your first 3 months
+            </p>
             <button
               onClick={() => handleUpgrade("monthly")}
               style={btn}
