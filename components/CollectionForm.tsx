@@ -106,6 +106,11 @@ const isLocked =
   const addDonationRow = () => {
     setDonations([...donations, { donor_name: "", check_number: "", amount: 0, donation_type: "Tithes" }]);
   };
+  const removeDonationRow = (index: number) => { // I ran into an issue where I added a row in error during live use at church and needed to remove it. This is the fix.
+
+  setDonations(donations.filter((_, i) => i !== index));
+
+};
 
   const handleDonationChange = (index: number, field: keyof Donation, value: string | number) => {
   const updated = [...donations];
@@ -464,6 +469,11 @@ const resetForm = () => {
           <select value={d.donation_type} onChange={(e) => handleDonationChange(i, "donation_type", e.target.value)} required>
             {donationTypes.map((t) => <option key={t}>{t}</option>)}
           </select>
+          {donations.length > 1 && ( // only show remove button if there's more than 1 donation row to prevent accidental removal of all rows
+            <button type="button" onClick={() => removeDonationRow(i)} className="btn-remove">
+              Remove
+            </button>
+          )}
         </div>
       ))}
 

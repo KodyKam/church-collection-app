@@ -164,6 +164,23 @@ button {
 .btn-add:hover {
   background-color: #3749c0;
 }
+/* Remove Offering */
+.btn-remove {
+  align-self: center;
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid #dc2626;
+  background-color: #fff;
+  color: #dc2626;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-remove:hover {
+  background-color: #dc2626;
+  color: #fff;
+}
 
 /* Submit Button */
 .btn-submit {
