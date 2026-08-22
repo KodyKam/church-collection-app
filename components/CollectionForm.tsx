@@ -20,6 +20,7 @@ export default function CollectionForm() {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [serviceType, setServiceType] = useState("Sabbath Class");
   const [customServiceType, setCustomServiceType] = useState("");
+  const [customDonationTypes, setCustomDonationTypes] = useState<string[]>([]);
   const [recordedBy, setRecordedBy] = useState("");
   const [countedBy, setCountedBy] = useState("");
   const [donations, setDonations] = useState<Donation[]>([
@@ -110,6 +111,7 @@ const isLocked =
 
   setDonations(donations.filter((_, i) => i !== index));
 
+  setCustomDonationTypes(customDonationTypes.filter((_, i) => i !== index));
 };
 
   const handleDonationChange = (index: number, field: keyof Donation, value: string | number) => {
@@ -193,6 +195,17 @@ const compressImage = (file: File): Promise<File> => {
       return;
     }
 
+    const hasInvalidCustomDonationType = donations.some(
+      (d, i) =>
+        d.donation_type === "Other" &&
+        !customDonationTypes[i]?.trim()
+    );
+
+    if (hasInvalidCustomDonationType) {
+      toast.error("Please enter a donation type for all 'Other' offerings");
+      return;
+    }
+
     if (isLocked) {
       alert("Your trial has expired. Please upgrade to continue.");
       setIsSubmitting(false);
@@ -253,8 +266,12 @@ const compressImage = (file: File): Promise<File> => {
     if (collectionError) throw collectionError;
 
     // 4️⃣ Insert donations
-    const donationsToInsert = donations.map((d) => ({
+    const donationsToInsert = donations.map((d, i) => ({
       ...d,
+      donation_type:
+        d.donation_type === "Other"
+          ? customDonationTypes[i]?.trim()
+          : d.donation_type,
       collection_id: collection.id,
     }));
     
@@ -466,9 +483,42 @@ const resetForm = () => {
           <input type="text" placeholder="Donor Name" value={d.donor_name} onChange={(e) => handleDonationChange(i, "donor_name", e.target.value)} required />
           <input type="text" placeholder="Check #" value={d.check_number} onChange={(e) => handleDonationChange(i, "check_number", e.target.value)} />
           <input type="number" placeholder="Amount" value={d.amount} onChange={(e) => handleDonationChange(i, "amount", e.target.value)} required />
-          <select value={d.donation_type} onChange={(e) => handleDonationChange(i, "donation_type", e.target.value)} required>
-            {donationTypes.map((t) => <option key={t}>{t}</option>)}
-          </select>
+          {/* Donation Type to handle "Other" option with custom input */}
+          {d.donation_type === "Other" ? (
+  <input
+    type="text"
+    placeholder="Enter donation type"
+    value={customDonationTypes[i] || ""}
+    onChange={(e) => {
+      const updated = [...customDonationTypes];
+      updated[i] = e.target.value;
+      setCustomDonationTypes(updated);
+    }}
+    required
+  />
+) : (
+  <select
+    value={d.donation_type}
+    onChange={(e) => {
+      const value = e.target.value;
+
+      handleDonationChange(i, "donation_type", value);
+
+      if (value === "Other") {
+        const updated = [...customDonationTypes];
+        updated[i] = "";
+        setCustomDonationTypes(updated);
+      }
+    }}
+    required
+  >
+    {donationTypes.map((t) => (
+      <option key={t} value={t}>
+        {t}
+      </option>
+    ))}
+  </select>
+)}
           {donations.length > 1 && ( // only show remove button if there's more than 1 donation row to prevent accidental removal of all rows
             <button type="button" onClick={() => removeDonationRow(i)} className="btn-remove">
               Remove
