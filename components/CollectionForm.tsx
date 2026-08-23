@@ -431,34 +431,34 @@ const resetForm = () => {
 
           <label>
             Service Type:
-            <select
-              value={serviceType}
-              onChange={(e) => setServiceType(e.target.value)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: "8px",
-                border: "1px solid #ddd",
-                height: "40px",
-              }}              
-              required
-            >
-              {/* <option value="">Select Service Type</option> */} {/* redacted to let "Sabbath Class" be default */}
-
-              {serviceTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-              </option>
-            ))}
-          </select>
-          {serviceType === "Other" && (
-            <input
-              autoFocus
-              type="text"
-              placeholder="Enter service type"
-              value={customServiceType}
-              onChange={(e) => setCustomServiceType(e.target.value)}
-            />
-          )}
+            {serviceType === "Other" ? (
+              <input
+                autoFocus
+                type="text"
+                placeholder="Enter service type"
+                value={customServiceType}
+                onChange={(e) => setCustomServiceType(e.target.value)}
+                required
+              />
+            ) : (
+              <select
+                value={serviceType}
+                onChange={(e) => setServiceType(e.target.value)}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  height: "40px",
+                }}
+                required
+              >
+                {serviceTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
         </div>
 
@@ -486,6 +486,7 @@ const resetForm = () => {
           {/* Donation Type to handle "Other" option with custom input */}
           {d.donation_type === "Other" ? (
   <input
+    autoFocus
     type="text"
     placeholder="Enter donation type"
     value={customDonationTypes[i] || ""}

@@ -308,7 +308,7 @@ export default function HomePage() {
             color: "#9ca3af",
           }}
         >
-          © {new Date().getFullYear()} Tithr - All rights reserved.
+          © {new Date().getFullYear()} Tithr · V1.0.1 · All rights reserved.
         </div>
       </div>
     </main>
