@@ -11,6 +11,7 @@ import TrialBanner from "./TrialBanner";
 
 type Donation = {
   donor_name: string;
+  donor_id?: string | null; // adding donor_id to link to donors table for future enhancements
   check_number: string;
   amount: number;
   donation_type: string;
@@ -36,6 +37,14 @@ export default function CollectionForm() {
 
   const [user, setUser] = useState<any>(null);
 
+  const [donors, setDonors] = useState<any[]>([]); // to store donors fetched from the API
+
+  const [donorSearch, setDonorSearch] = useState(""); // to store the search input for donors
+
+  const [activeDonorRow, setActiveDonorRow] = useState<number | null>(null); // to track which donation row is currently being edited for donor search
+
+  const [isLoadingDonors, setIsLoadingDonors] = useState(false); // to indicate if donor search is in progress
+
   useEffect(() => { // this loads user on mount
     const loadUser = async () => {
       const {
@@ -47,6 +56,61 @@ export default function CollectionForm() {
 
     loadUser();
   }, []);
+
+  // Fetch donors from the API when donorSearch changes
+//   const loadDonors = async () => {
+//   setIsLoadingDonors(true);
+
+//   try {
+//     const { data, error } = await supabase
+//       .from("donors")
+//       .select("id, name")
+//       .order("name", { ascending: true });
+
+//     if (error) throw error;
+
+//     setDonors(data || []);
+//   } catch (error) {
+//     console.error("Failed to load donors:", error);
+//     toast.error("Could not load donor list");
+//   } finally {
+//     setIsLoadingDonors(false);
+//   }
+// };
+
+// quick testing
+const loadDonors = async () => {
+  setIsLoadingDonors(true);
+
+  try {
+    const { data, error } = await supabase
+      .from("donors")
+      .select("id, name")
+      .order("name", { ascending: true });
+
+    console.log("DONOR LOAD:", {
+      userId: user?.id,
+      data,
+      error,
+    });
+
+    if (error) throw error;
+
+    setDonors(data || []);
+  } catch (error) {
+    console.error("Failed to load donors:", error);
+    toast.error("Could not load donor list");
+  } finally {
+    setIsLoadingDonors(false);
+  }
+};
+// quick testing
+
+useEffect(() => { // Load donors when user is available
+  if (user) {
+    loadDonors();
+  }
+}, [user]);
 
   const [church, setChurch] = useState<any>(null);
 
@@ -266,20 +330,60 @@ const compressImage = (file: File): Promise<File> => {
     if (collectionError) throw collectionError;
 
     // 4️⃣ Insert donations
-    const donationsToInsert = donations.map((d, i) => ({
-      ...d,
-      donation_type:
-        d.donation_type === "Other"
-          ? customDonationTypes[i]?.trim()
-          : d.donation_type,
-      collection_id: collection.id,
-    }));
-    
-    const { error: donationsError } = await supabase
-      .from("donations")
-      .insert(donationsToInsert);
+    // 4️⃣ Make sure every donation has a donor_id
+const donationsToInsert = [];
 
-    if (donationsError) throw donationsError;
+for (const [i, d] of donations.entries()) {
+  let donorId = d.donor_id || null;
+
+  // If this is a new donor, create the donor record.
+  if (!donorId && d.donor_name.trim()) {
+    const donorName = d.donor_name.trim();
+
+    // Check whether this donor already exists.
+    const { data: existingDonor, error: donorLookupError } = await supabase
+      .from("donors")
+      .select("id")
+      .eq("name", donorName)
+      .maybeSingle();
+
+    if (donorLookupError) throw donorLookupError;
+
+    if (existingDonor) {
+      donorId = existingDonor.id;
+    } else {
+      // Create the new donor.
+      const { data: newDonor, error: donorCreateError } = await supabase
+        .from("donors")
+        .insert({
+          name: donorName,
+          user_id: user.id,
+        })
+        .select("id")
+        .single();
+
+      if (donorCreateError) throw donorCreateError;
+
+      donorId = newDonor.id;
+    }
+  }
+
+  donationsToInsert.push({
+    ...d,
+    donor_id: donorId,
+    donation_type:
+      d.donation_type === "Other"
+        ? customDonationTypes[i]?.trim()
+        : d.donation_type,
+    collection_id: collection.id,
+  });
+}
+
+const { error: donationsError } = await supabase
+  .from("donations")
+  .insert(donationsToInsert);
+
+if (donationsError) throw donationsError;
 
     // 5️⃣ Reset form & navigate
     router.push(`/collection/${collection.id}`);
@@ -480,7 +584,100 @@ const resetForm = () => {
       <h2>Offerings</h2>
       {donations.map((d, i) => (
         <div key={i} className="donation-row">
-          <input type="text" placeholder="Donor Name" value={d.donor_name} onChange={(e) => handleDonationChange(i, "donor_name", e.target.value)} required />
+          <div style={{ position: "relative", flex: 1 }}>
+  <input
+    type="text"
+    placeholder="Donor Name"
+    value={d.donor_name}
+    onChange={(e) => {
+      const value = e.target.value;
+
+      const updated = [...donations];
+
+      updated[i] = {
+        ...updated[i],
+        donor_name: value,
+        donor_id: null,
+      };
+
+  setDonations(updated);
+  setDonorSearch(value);
+  setActiveDonorRow(i);
+}}
+    onFocus={() => {
+      setDonorSearch(d.donor_name);
+      setActiveDonorRow(i);
+    }}
+    onBlur={() => {
+      // Small delay allows a donor suggestion to be clicked
+      // before the dropdown disappears.
+      setTimeout(() => setActiveDonorRow(null), 150);
+    }}
+    required
+  />
+
+  {activeDonorRow === i &&
+    donorSearch.trim() &&
+    donors.filter((donor) =>
+      donor.name.toLowerCase().includes(donorSearch.trim().toLowerCase())
+    ).length > 0 && (
+      <div
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          background: "#fff",
+          border: "1px solid #ddd",
+          borderRadius: "8px",
+          marginTop: "4px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+          zIndex: 50,
+          maxHeight: "200px",
+          overflowY: "auto",
+        }}
+      >
+        {donors
+          .filter((donor) =>
+            donor.name
+              .toLowerCase()
+              .includes(donorSearch.trim().toLowerCase())
+          )
+          .map((donor) => (
+            <button
+              key={donor.id}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                const updated = [...donations];
+
+                updated[i] = {
+                  ...updated[i],
+                  donor_name: donor.name,
+                  donor_id: donor.id,
+                };
+
+  setDonations(updated);
+  setDonorSearch(donor.name);
+  setActiveDonorRow(null);
+}}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "10px 12px",
+                textAlign: "left",
+                border: "none",
+                background: "#fff",
+                cursor: "pointer",
+                fontSize: "0.95rem",
+              }}
+            >
+              {donor.name}
+            </button>
+          ))}
+      </div>
+    )}
+</div>
           <input type="text" placeholder="Check #" value={d.check_number} onChange={(e) => handleDonationChange(i, "check_number", e.target.value)} />
           <input type="number" placeholder="Amount" value={d.amount} onChange={(e) => handleDonationChange(i, "amount", e.target.value)} required />
           {/* Donation Type to handle "Other" option with custom input */}
