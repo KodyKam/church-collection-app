@@ -32,7 +32,7 @@ export default function LayoutWrapper({ church, children }: any) {
             color: "#9ca3af",
           }}
         >
-          © {new Date().getFullYear()} Tithr · V1.1.0 · All rights reserved.
+          © {new Date().getFullYear()} Tithr · V1.2.0 · All rights reserved.
         </div>
         )}
     </>
