@@ -42,12 +42,21 @@ export default async function Page({ params }: PageProps) {
   // Create signed URL for deposit slip (1 hour)
   let depositUrl: string | null = null;
   if (collection.deposit_slip_url) {
-    const { data: signedData, error: signedError } = await supabase.storage
-      .from("deposit-slips")
-      .createSignedUrl(collection.deposit_slip_url, 60 * 60);
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from("deposit-slips")
+    .createSignedUrl(collection.deposit_slip_url, 60 * 60);
 
-    if (!signedError) depositUrl = signedData?.signedUrl || null;
-  }
+  if (signedError) {
+  // A missing deposit slip should not break the collection preview.
+  console.warn("Deposit slip unavailable:", {
+    path: collection.deposit_slip_url,
+    message: signedError.message,
+    statusCode: signedError.statusCode,
+  });
+} else {
+  depositUrl = signedData?.signedUrl || null;
+}
+}
 
   // ✅ Pass data to client component for PDF/buttons
   return <CollectionPreview collection={collection} depositUrl={depositUrl} church={church} />;

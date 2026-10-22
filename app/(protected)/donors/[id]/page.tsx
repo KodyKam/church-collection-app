@@ -1,4 +1,4 @@
-
+// app/(protected)/donors/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,12 +9,22 @@ type Donor = {
   name: string;
 };
 
+type CollectionHistory = {
+  id: string;
+  date: string;
+  service_type: string | null;
+  voided_at: string | null;
+  void_reason: string | null;
+};
+
 type Donation = {
   id: string;
   donor_name: string;
   amount: number;
   donation_type: string;
   created_at: string;
+  collection_id: string | null;
+  collection: CollectionHistory | null;
 };
 
 export default function DonorHistoryPage() {
@@ -31,8 +41,10 @@ export default function DonorHistoryPage() {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const res = await fetch(`/api/donors/${donorId}/history`);
+        setLoading(true);
+        setError("");
 
+        const res = await fetch(`/api/donors/${donorId}/history`);
         const data = await res.json();
 
         if (!res.ok) {
@@ -41,9 +53,14 @@ export default function DonorHistoryPage() {
 
         setDonor(data.donor);
         setDonations(data.donations || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Donor history error:", err);
-        setError(err.message || "Could not load donor history");
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not load donor history"
+        );
       } finally {
         setLoading(false);
       }
@@ -54,10 +71,19 @@ export default function DonorHistoryPage() {
     }
   }, [donorId]);
 
-  const totalAmount = donations.reduce(
+  // Keep voided donations in the history, but exclude them from valid totals.
+  const validDonations = donations.filter(
+    (donation) => !donation.collection?.voided_at
+  );
+
+  const totalAmount = validDonations.reduce(
     (sum, donation) => sum + (Number(donation.amount) || 0),
     0
   );
+
+  const totalDonations = validDonations.length;
+
+  const voidedDonations = donations.length - validDonations.length;
 
   if (loading) {
     return (
@@ -70,17 +96,7 @@ export default function DonorHistoryPage() {
   if (error) {
     return (
       <div style={{ padding: "40px", maxWidth: "1000px", margin: "0 auto" }}>
-        <button
-          onClick={() => router.back()}
-          style={{
-            marginBottom: "20px",
-            padding: "8px 14px",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            background: "white",
-            cursor: "pointer",
-          }}
-        >
+        <button onClick={() => router.back()} style={buttonStyle}>
           ← Back
         </button>
 
@@ -101,12 +117,8 @@ export default function DonorHistoryPage() {
       <button
         onClick={() => router.back()}
         style={{
+          ...buttonStyle,
           marginBottom: "20px",
-          padding: "8px 14px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-          background: "white",
-          cursor: "pointer",
         }}
       >
         ← Back
@@ -122,16 +134,12 @@ export default function DonorHistoryPage() {
           {donor?.name}
         </h1>
 
-        <p
-          style={{
-            margin: 0,
-            color: "#666",
-          }}
-        >
+        <p style={{ margin: 0, color: "#666" }}>
           Donor contribution history
         </p>
       </div>
 
+      {/* Contribution statistics exclude voided donations. */}
       <div
         style={{
           display: "grid",
@@ -140,52 +148,44 @@ export default function DonorHistoryPage() {
           marginBottom: "30px",
         }}
       >
-        <div
-          style={{
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-            background: "#fff",
-          }}
-        >
-          <div style={{ color: "#666", fontSize: "14px" }}>
-            Total Donations
-          </div>
+        <div style={cardStyle}>
+          <div style={labelStyle}>Total Donations</div>
 
-          <div
-            style={{
-              fontSize: "28px",
-              fontWeight: 700,
-              marginTop: "6px",
-            }}
-          >
-            {donations.length}
-          </div>
+          <div style={valueStyle}>{totalDonations}</div>
+
         </div>
 
-        <div
-          style={{
-            padding: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-            background: "#fff",
-          }}
-        >
-          <div style={{ color: "#666", fontSize: "14px" }}>
-            Total Contributed
-          </div>
+        <div style={cardStyle}>
+          <div style={labelStyle}>Total Contributed</div>
 
-          <div
-            style={{
-              fontSize: "28px",
-              fontWeight: 700,
-              marginTop: "6px",
-            }}
-          >
-            ${totalAmount.toFixed(2)}
+          <div style={valueStyle}>${totalAmount.toFixed(2)}</div>
+
+          <div style={helperStyle}>
+            Excludes amounts from voided collections
           </div>
         </div>
       </div>
+
+      {/* Explain why historical entries may not count toward totals. */}
+      {voidedDonations > 0 && (
+        <div
+          style={{
+            marginBottom: "25px",
+            padding: "14px 16px",
+            border: "1px solid #fecaca",
+            borderRadius: "8px",
+            background: "#fef2f2",
+            color: "#991b1b",
+            fontSize: "14px",
+          }}
+        >
+          {voidedDonations} donation
+          {voidedDonations === 1 ? "" : "s"} from voided collection
+          {voidedDonations === 1 ? "" : "s"} shown below for historical
+          reference. {voidedDonations === 1 ? "It does" : "They do"} not
+          count toward the totals above.
+        </div>
+      )}
 
       <h2 style={{ marginBottom: "15px" }}>Donation History</h2>
 
@@ -212,7 +212,7 @@ export default function DonorHistoryPage() {
             style={{
               width: "100%",
               borderCollapse: "collapse",
-              minWidth: "600px",
+              minWidth: "700px",
             }}
           >
             <thead>
@@ -220,25 +220,88 @@ export default function DonorHistoryPage() {
                 <th style={headerStyle}>Date</th>
                 <th style={headerStyle}>Amount</th>
                 <th style={headerStyle}>Donation Type</th>
+                <th style={headerStyle}>Collection Status</th>
               </tr>
             </thead>
 
             <tbody>
-              {donations.map((donation) => (
-                <tr key={donation.id}>
-                  <td style={cellStyle}>
-                    {new Date(donation.created_at).toLocaleDateString(
-                      "en-CA"
-                    )}
-                  </td>
+              {donations.map((donation) => {
+                const isVoided = Boolean(donation.collection?.voided_at);
 
-                  <td style={cellStyle}>
-                    ${Number(donation.amount).toFixed(2)}
-                  </td>
+                return (
+                  <tr
+                    key={donation.id}
+                    style={{
+                      background: isVoided ? "#fff7f7" : "#fff",
+                    }}
+                  >
+                    <td style={cellStyle}>
+                      {donation.collection?.date
+                        ? new Date(
+                            `${donation.collection.date}T12:00:00`
+                          ).toLocaleDateString("en-CA")
+                        : new Date(donation.created_at).toLocaleDateString(
+                            "en-CA"
+                          )}
+                    </td>
 
-                  <td style={cellStyle}>{donation.donation_type}</td>
-                </tr>
-              ))}
+                    <td
+                      style={{
+                        ...cellStyle,
+                        color: isVoided ? "#991b1b" : "#111",
+                      }}
+                    >
+                      ${Number(donation.amount).toFixed(2)}
+                    </td>
+
+                    <td style={cellStyle}>{donation.donation_type}</td>
+
+                    <td style={cellStyle}>
+                      {isVoided ? (
+                        <div>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 9px",
+                              borderRadius: "5px",
+                              background: "#fee2e2",
+                              color: "#991b1b",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                            }}
+                          >
+                            VOIDED
+                          </span>
+
+                          <div
+                            style={{
+                              marginTop: "6px",
+                              color: "#991b1b",
+                              fontSize: "13px",
+                              maxWidth: "260px",
+                              whiteSpace: "normal",
+                            }}
+                          >
+                            <strong>Reason:</strong>{" "}
+                            {donation.collection?.void_reason ||
+                              "No reason recorded"}
+                          </div>
+                        </div>
+                      ) : (
+                        <span
+                          style={{
+                            color: "#166534",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Valid
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -246,6 +309,39 @@ export default function DonorHistoryPage() {
     </div>
   );
 }
+
+const buttonStyle: React.CSSProperties = {
+  marginBottom: "20px",
+  padding: "8px 14px",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+  background: "white",
+  cursor: "pointer",
+};
+
+const cardStyle: React.CSSProperties = {
+  padding: "20px",
+  border: "1px solid #ddd",
+  borderRadius: "10px",
+  background: "#fff",
+};
+
+const labelStyle: React.CSSProperties = {
+  color: "#666",
+  fontSize: "14px",
+};
+
+const valueStyle: React.CSSProperties = {
+  fontSize: "28px",
+  fontWeight: 700,
+  marginTop: "6px",
+};
+
+const helperStyle: React.CSSProperties = {
+  marginTop: "8px",
+  color: "#777",
+  fontSize: "12px",
+};
 
 const headerStyle: React.CSSProperties = {
   textAlign: "left",

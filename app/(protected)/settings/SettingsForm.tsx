@@ -34,7 +34,16 @@ export default function SettingsForm() {
     try {
       // Upload logo if changed
       if (logo) {
-        const fileName = `logos/${Date.now()}_${logo.name}`;
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          throw new Error("You must be signed in to upload a church logo.");
+        }
+
+        const fileName = `logos/${user.id}/${Date.now()}_${logo.name}`;
 
         const { error } = await supabase.storage
           .from("church-logos")

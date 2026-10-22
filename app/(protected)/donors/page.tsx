@@ -14,6 +14,14 @@ type Donor = {
 type DonationSummary = {
   donor_id: string;
   amount: number;
+  collections:
+    | {
+        voided_at: string | null;
+      }
+    | {
+        voided_at: string | null;
+      }[]
+    | null;
 };
 
 export default function DonorsPage() {
@@ -49,9 +57,15 @@ export default function DonorsPage() {
 
         const { data: donationData, error: donationError } = await supabase
           .from("donations")
-          .select("donor_id, amount")
+          .select(`
+            donor_id,
+            amount,
+            collections!donations_collection_id_fkey (
+              voided_at
+            )
+          `)
           .eq("user_id", user.id)
-          .not("donor_id", "is", null);
+        .not("donor_id", "is", null);
 
         if (donationError) {
           throw donationError;
@@ -80,18 +94,28 @@ export default function DonorsPage() {
     > = {};
 
     for (const donation of donations) {
-      if (!donation.donor_id) continue;
+  if (!donation.donor_id) continue;
 
-      if (!summary[donation.donor_id]) {
-        summary[donation.donor_id] = {
-          count: 0,
-          total: 0,
-        };
-      }
+  // Exclude donations belonging to voided collections.
+  // Exclude donations belonging to voided collections.
+const relatedCollection = Array.isArray(donation.collections)
+  ? donation.collections[0]
+  : donation.collections;
 
-      summary[donation.donor_id].count += 1;
-      summary[donation.donor_id].total += Number(donation.amount) || 0;
-    }
+if (relatedCollection?.voided_at) {
+  continue;
+}
+
+  if (!summary[donation.donor_id]) {
+    summary[donation.donor_id] = {
+      count: 0,
+      total: 0,
+    };
+  }
+
+  summary[donation.donor_id].count += 1;
+  summary[donation.donor_id].total += Number(donation.amount) || 0;
+}
 
     return summary;
   }, [donations]);
@@ -210,15 +234,26 @@ export default function DonorsPage() {
             : "No donors have been added yet."}
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "16px",
-          }}
-        >
-          {filteredDonors.map((donor) => {
+  <>
+    <p
+      style={{
+        margin: "0 0 16px",
+        color: "#666",
+        fontSize: "13px",
+      }}
+    >
+      Donor totals exclude donations from voided collections.
+    </p>
+
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit, minmax(280px, 1fr))",
+        gap: "16px",
+      }}
+    >
+      {filteredDonors.map((donor) => {
             const summary = donorSummaries[donor.id] || {
               count: 0,
               total: 0,
@@ -288,6 +323,7 @@ export default function DonorsPage() {
             );
           })}
         </div>
+        </> // I added it here after much trial and ERROR
       )}
     </div>
   );

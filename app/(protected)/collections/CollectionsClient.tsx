@@ -94,13 +94,16 @@ useEffect(() => {
     setFiltered(result);
   }, [startDate, endDate, search, collections]);
 
-  // 💰 Total calculations
-  const totalAmount = filtered.reduce(
+    // 💰 Financial totals exclude voided collections.
+  // Voided records remain visible for historical reference.
+  const validCollections = filtered.filter((c) => !c.voided_at);
+
+  const totalAmount = validCollections.reduce(
     (sum, c) => sum + Number(c.total || 0),
     0
   );
 
-  const totalCount = filtered.length;
+  const totalCount = validCollections.length;
 
   if (loading) {
     return <p style={{ padding: "2rem" }}>Loading collections...</p>;
@@ -216,12 +219,14 @@ useEffect(() => {
           <div
             key={c.id}
             onClick={() => router.push(`/collection/${c.id}`)}
-            style={{
+                        style={{
               padding: "1rem",
-              border: "1px solid #e5e7eb",
+              border: c.voided_at
+                ? "1px solid #dc2626"
+                : "1px solid #e5e7eb",
               borderRadius: "10px",
               marginBottom: "1rem",
-              background: "#fff",
+              background: c.voided_at ? "#fef2f2" : "#fff",
               cursor: "pointer",
               transition: "all 0.15s ease",
             }}
@@ -234,12 +239,39 @@ useEffect(() => {
           >
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontWeight: 600 }}>
+                                <div style={{ fontWeight: 600 }}>
                   {c.service_type}
+                  {c.voided_at && (
+                    <span
+                      style={{
+                        marginLeft: "0.5rem",
+                        padding: "0.2rem 0.45rem",
+                        borderRadius: "4px",
+                        background: "#dc2626",
+                        color: "#fff",
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                      }}
+                    >
+                      VOIDED
+                    </span>
+                  )}
                 </div>
-                <div style={{ fontSize: "0.9rem", color: "#6b7280" }}>
+                                <div style={{ fontSize: "0.9rem", color: "#6b7280" }}>
                   {c.date}
                 </div>
+
+                {c.voided_at && (
+                  <div
+                    style={{
+                      marginTop: "0.35rem",
+                      fontSize: "0.85rem",
+                      color: "#991b1b",
+                    }}
+                  >
+                    Reason: {c.void_reason || "No reason recorded"}
+                  </div>
+                )}
               </div>
 
               <div style={{ textAlign: "right" }}>

@@ -8,43 +8,75 @@ import { useRouter } from "next/navigation";
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleRegister = async () => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+    if (loading) return;
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+    setLoading(true);
 
-  const user = data.user;
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+      });
 
-  if (!user) {
-    alert("Something went wrong");
-    return;
-  }
+      if (error) {
+        alert(error.message);
+        return;
+      }
 
-  // 🔥 send welcome email
-  const res = await fetch("/api/send-welcome-email", {
-    method: "POST",
-    body: JSON.stringify({
-      email,
-      userId: user.id,
-    }),
-  });
+      const user = data.user;
 
-  console.log("EMAIL API STATUS:", res.status);
+      if (!user) {
+        alert("Registration could not be completed. Please try again.");
+        return;
+      }
 
-  // 🚨 force logout so user cannot proceed
-  await supabase.auth.signOut();
+      let emailSent = false;
 
-  alert("Check your email to confirm your account");
-  router.push("/login");
-};
+      try {
+        const res = await fetch("/api/send-welcome-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: user.email,
+            userId: user.id,
+          }),
+        });
+
+        emailSent = res.ok;
+      } catch {
+        // The email request failed before a successful response.
+        emailSent = false;
+      }
+
+      // Preserve the existing requirement that registration
+      // ends with the user signed out.
+      const { error: signOutError } = await supabase.auth.signOut();
+
+      if (signOutError) {
+        console.error("Registration sign-out failed.");
+      }
+
+      if (!emailSent) {
+        alert(
+          "Your account may have been created, but we couldn't confirm that your verification email was sent. Please contact support before trying to register again."
+        );
+        return;
+      }
+
+      alert("Check your email for your account verification link.");
+      router.push("/login");
+    } catch {
+      alert("Something went wrong during registration. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-container">
@@ -53,21 +85,30 @@ export default function RegisterPage() {
       <div className="auth-overlay">
         <input
           className="auth-input"
+          type="email"
           placeholder="Email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          disabled={loading}
         />
 
         <input
           className="auth-input"
           type="password"
           placeholder="Password"
+          autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          disabled={loading}
         />
 
-        <button className="auth-button" onClick={handleRegister}>
-          Start Free Trial
+        <button
+          className="auth-button"
+          onClick={handleRegister}
+          disabled={loading}
+        >
+          {loading ? "Creating account..." : "Start Free Trial"}
         </button>
       </div>
     </div>

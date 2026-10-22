@@ -12,6 +12,8 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
+    const [isVoiding, setIsVoiding] = useState(false); // State to track if the voiding process is in progress
+
   // ✅ Compute total donations
   const totalAmount = collection.donations.reduce(
     (sum: number, d: any) => sum + Number(d.amount || 0),
@@ -22,6 +24,10 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
      DOWNLOAD PDF
   =========================== */
   const handleDownloadPDF = async () => {
+        if (collection.voided_at) {
+      alert("This collection has been voided. PDF downloads are disabled.");
+      return;
+    } // Check if the collection is voided before generating the PDF
     setIsGeneratingPDF(true);
 
     try {
@@ -53,6 +59,10 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
      SEND OFFERINGS REPORT
   =========================== */
   const handleSendEmail = async () => {
+        if (collection.voided_at) {
+      alert("This collection has been voided. Email reports are disabled.");
+      return;
+    } // Check if the collection is voided before sending the email
     setIsSendingEmail(true);
 
     // if (!church?.email) { // Not trusting frontend validation for critical config - API route will also check and fail safely if missing
@@ -67,10 +77,7 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          collection,
-          donations: collection.donations,
-          total: totalAmount,
-          depositUrl, //send the known URL to the API so it can include in the PDF (no need to generate again)
+          collectionId: collection.id,
         }),
       });
 
@@ -89,6 +96,71 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
     }
   };
 
+    /* ===========================
+     VOID COLLECTION
+  =========================== */
+  const handleVoidCollection = async () => {
+    if (collection.voided_at) {
+      alert("This collection has already been voided.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to void this collection?\n\n" +
+      "The collection and its donations will be preserved, but the " +
+      "collection will be excluded from valid financial totals."
+    );
+
+    if (!confirmed) return;
+
+    const reason = window.prompt(
+      "Enter the reason for voiding this collection:"
+    );
+
+    if (reason === null) return;
+
+    if (!reason.trim()) {
+      alert("A reason is required to void a collection.");
+      return;
+    }
+
+    if (reason.trim().length > 500) {
+      alert("The reason must be 500 characters or fewer.");
+      return;
+    }
+
+    setIsVoiding(true);
+
+    try {
+      const res = await fetch(
+        `/api/collections/${collection.id}/void`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ reason: reason.trim() }),
+        }
+      );
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to void collection.");
+      }
+
+      alert("Collection voided successfully.");
+
+      // Reload the server-rendered collection data.
+      router.refresh();
+    } catch (err: any) {
+      console.error("Void collection error:", err);
+      alert(err.message || "Failed to void collection.");
+    } finally {
+      setIsVoiding(false);
+    }
+  };
+
   /* ===========================
      UI
   =========================== */
@@ -98,6 +170,37 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
       <h1 style={{ marginBottom: "1rem", color: "#1f2937" }}>
         Collection Preview
       </h1>
+
+            {collection.voided_at && (
+        <div
+          style={{
+            marginBottom: "1.5rem",
+            padding: "1rem",
+            border: "1px solid #dc2626",
+            borderRadius: "8px",
+            background: "#fef2f2",
+            color: "#991b1b",
+          }}
+        >
+          <h2 style={{ margin: "0 0 0.5rem" }}>
+            VOIDED COLLECTION
+          </h2>
+
+          <p style={{ margin: "0 0 0.5rem" }}>
+            <strong>Voided on:</strong>{" "}
+            {new Date(collection.voided_at).toLocaleString("en-CA")}
+          </p>
+
+          <p style={{ margin: 0 }}>
+            <strong>Reason:</strong> {collection.void_reason}
+          </p>
+
+          <p style={{ margin: "0.75rem 0 0", fontSize: "0.9rem" }}>
+            This record is retained for historical reference and must not
+            be treated as a valid collection.
+          </p>
+        </div>
+      )}
 
       <p><strong>Date:</strong> {collection.date}</p>
       <p><strong>Service:</strong> {collection.service_type}</p>
@@ -179,7 +282,7 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
         <button
           style={{ padding: "0.5rem 1rem", borderRadius: "6px", border: "none", backgroundColor: "#10b981", color: "#fff" }}
           onClick={handleSendEmail}
-          disabled={isSendingEmail}
+          disabled={isSendingEmail || isVoiding || !!collection.voided_at}
         >
           {isSendingEmail ? "Sending..." : "Send Offerings Report"}
         </button>
@@ -187,10 +290,27 @@ export default function CollectionPreview({ collection, depositUrl, church }: an
         <button
           style={{ padding: "0.5rem 1rem", borderRadius: "6px", border: "none", backgroundColor: "#f59e0b", color: "#fff" }}
           onClick={handleDownloadPDF}
-          disabled={isGeneratingPDF}
+          disabled={isGeneratingPDF || isVoiding || !!collection.voided_at}
         >
           {isGeneratingPDF ? "Generating PDF..." : "Download PDF"}
         </button>
+                {!collection.voided_at && (
+          <button
+            style={{
+              padding: "0.5rem 1rem",
+              borderRadius: "6px",
+              border: "none",
+              backgroundColor: "#dc2626",
+              color: "#fff",
+              cursor: isVoiding ? "wait" : "pointer",
+              opacity: isVoiding ? 0.7 : 1,
+            }}
+            onClick={handleVoidCollection}
+            disabled={isVoiding || isSendingEmail || isGeneratingPDF}
+          >
+            {isVoiding ? "Voiding..." : "Void Collection"}
+          </button>
+        )}
       </div>
     </div>
   );

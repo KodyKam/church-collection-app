@@ -407,7 +407,8 @@ const handleExportCollections = async () => {
       .from("collections")
       .select("*, donations(*)")
       .gte("date", exportStart)
-      .lte("date", exportEnd);
+      .lte("date", exportEnd)
+      .is("voided_at", null);
 
     if (error) throw error;
     if (!collections) return;
