@@ -1,18 +1,33 @@
 // components/LayoutWrapper.tsx
 "use client";
 
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
+import TithrTour from "./TithrTour";
 
-export default function LayoutWrapper({ church, children }: any) {
+export default function LayoutWrapper({
+  church,
+  children,
+}: {
+  church: any;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   const isAuthPage =
-    pathname.startsWith("/login") || pathname.startsWith("/register");
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/register");
 
   return (
     <>
-      {!isAuthPage && <Navbar church={church} />}
+      {!isAuthPage && (
+        <Navbar
+          church={church}
+          onTakeTour={() => setIsTourOpen(true)}
+        />
+      )}
 
       <div
         style={{
@@ -23,7 +38,7 @@ export default function LayoutWrapper({ church, children }: any) {
       >
         {children}
       </div>
-      {/* FOOTER */}
+
       {!isAuthPage && (
         <div
           style={{
@@ -32,9 +47,16 @@ export default function LayoutWrapper({ church, children }: any) {
             color: "#9ca3af",
           }}
         >
-          © {new Date().getFullYear()} Tithr · V1.2.2 · All rights reserved.
+          © {new Date().getFullYear()} Tithr · V1.3.0 · All rights reserved.
         </div>
-        )}
+      )}
+
+      {!isAuthPage && (
+        <TithrTour
+          isOpen={isTourOpen}
+          onClose={() => setIsTourOpen(false)}
+        />
+      )}
     </>
   );
-  }
+}

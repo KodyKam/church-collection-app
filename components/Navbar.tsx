@@ -5,7 +5,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
-export default function Navbar({ church }: any) {
+export default function Navbar({
+  church,
+  onTakeTour,
+}: {
+  church: any;
+  onTakeTour?: () => void;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -215,6 +221,30 @@ export default function Navbar({ church }: any) {
                 }}
               >
                 Settings
+              </div>
+
+              {/* TAKE A TOUR */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setOpen(false);
+                  onTakeTour?.();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setOpen(false);
+                    onTakeTour?.();
+                  }
+                }}
+                style={{
+                  padding: "10px 14px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #f1f5f9",
+                }}
+              >
+                Take a Tour
               </div>
 
               {/* LOGOUT */}
