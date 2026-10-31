@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 "use client";
 
 import { supabase } from "@/lib/supabaseClient";
@@ -23,7 +22,6 @@ export default function Navbar({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close menu when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -59,6 +57,7 @@ export default function Navbar({
         background: "#fff",
         borderBottom: "1px solid #e5e7eb",
         padding: "0.75rem 1.5rem",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -67,8 +66,9 @@ export default function Navbar({
           maxWidth: "1200px",
           margin: "0 auto",
           display: "grid",
-          gridTemplateColumns: "1fr auto 1fr",
+          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
           alignItems: "center",
+          gap: "12px",
         }}
       >
         {/* LEFT: Logo */}
@@ -80,18 +80,23 @@ export default function Navbar({
             gap: "0.5rem",
             cursor: "pointer",
             justifySelf: "start",
+            minWidth: 0,
           }}
         >
           <img
             src="/tithr-logo.png"
             alt="Tithr Logo"
-            style={{ height: "40px" }}
+            className="tithr-logo"
+            style={{ height: "40px", width: "auto" }}
           />
-          <span style={{ fontWeight: 600 }}>Tithr</span>
+          <span className="brand-name" style={{ fontWeight: 600 }}>
+            Tithr
+          </span>
         </div>
 
         {/* CENTER: Church Name */}
         <div
+          className="church-name"
           style={{
             textAlign: "center",
             fontWeight: 600,
@@ -99,8 +104,8 @@ export default function Navbar({
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            minWidth: 0,
           }}
-          className="hide-mobile"
         >
           {church?.name || ""}
         </div>
@@ -112,8 +117,9 @@ export default function Navbar({
             display: "flex",
             justifyContent: "flex-end",
             alignItems: "center",
-            gap: "10px",
+            gap: "8px",
             position: "relative",
+            minWidth: 0,
           }}
         >
           {/* TAKE A TOUR BUTTON */}
@@ -123,6 +129,7 @@ export default function Navbar({
               setOpen(false);
               onTakeTour?.();
             }}
+            className="tour-button"
             style={{
               display: "flex",
               alignItems: "center",
@@ -138,6 +145,7 @@ export default function Navbar({
               cursor: "pointer",
               whiteSpace: "nowrap",
               transition: "background 0.2s",
+              flexShrink: 0,
             }}
             onMouseEnter={(e) =>
               (e.currentTarget.style.background = "#dbeafe")
@@ -157,6 +165,7 @@ export default function Navbar({
               display: "flex",
               alignItems: "center",
               position: "relative",
+              flexShrink: 0,
             }}
           >
             <button
@@ -167,13 +176,15 @@ export default function Navbar({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "0.5rem",
+                justifyContent: "center",
                 cursor: "pointer",
-                padding: "10px 14px",
+                padding: "8px 10px",
                 borderRadius: "8px",
                 border: "1px solid #e5e7eb",
                 background: "#fff",
                 transition: "background 0.2s",
+                minWidth: "48px",
+                minHeight: "48px",
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = "#f9fafb")
@@ -227,56 +238,31 @@ export default function Navbar({
                   overflow: "hidden",
                 }}
               >
-                {/* DONORS */}
-                <div
-                  onClick={() => {
-                    setOpen(false);
-                    router.push("/donors");
-                  }}
-                  style={{
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    borderBottom: "1px solid #f1f5f9",
-                  }}
-                >
-                  Donors
-                </div>
+                {[
+                  { label: "Donors", path: "/donors" },
+                  { label: "Collections", path: "/collections" },
+                  { label: "Settings", path: "/settings" },
+                ].map((item) => (
+                  <div
+                    key={item.path}
+                    onClick={() => {
+                      setOpen(false);
+                      router.push(item.path);
+                    }}
+                    style={{
+                      padding: "12px 14px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid #f1f5f9",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                ))}
 
-                {/* COLLECTIONS */}
-                <div
-                  onClick={() => {
-                    setOpen(false);
-                    router.push("/collections");
-                  }}
-                  style={{
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    borderBottom: "1px solid #f1f5f9",
-                  }}
-                >
-                  Collections
-                </div>
-
-                {/* SETTINGS */}
-                <div
-                  onClick={() => {
-                    setOpen(false);
-                    router.push("/settings");
-                  }}
-                  style={{
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    borderBottom: "1px solid #f1f5f9",
-                  }}
-                >
-                  Settings
-                </div>
-
-                {/* LOGOUT */}
                 <div
                   onClick={handleLogout}
                   style={{
-                    padding: "10px 14px",
+                    padding: "12px 14px",
                     cursor: "pointer",
                     color: "#ef4444",
                   }}
@@ -289,26 +275,68 @@ export default function Navbar({
         </div>
       </div>
 
-      {/* MOBILE STYLE */}
       <style jsx>{`
+        @media (max-width: 900px) {
+          .church-name {
+            font-size: 0.85rem !important;
+          }
+        }
+
         @media (max-width: 640px) {
           .navbar-inner {
             display: flex !important;
             justify-content: space-between;
+            gap: 8px !important;
           }
 
-          .hide-mobile {
+          .church-name {
+            flex: 1;
+            font-size: 0.75rem !important;
+            min-width: 0;
+          }
+
+          .tithr-logo {
+            height: 34px !important;
+          }
+
+          .brand-name {
             display: none;
           }
 
-          .tour-button-label {
-            display: inline;
+          .tour-button {
+            padding: 9px 11px !important;
           }
         }
 
-        @media (max-width: 380px) {
+        @media (max-width: 420px) {
+          .church-name {
+            display: none;
+          }
+
+          .tour-button {
+            width: 44px;
+            height: 44px;
+            padding: 0 !important;
+            font-size: 1.2rem !important;
+          }
+
           .tour-button-label {
             display: none;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .navbar-inner {
+            gap: 6px !important;
+          }
+
+          .tithr-logo {
+            height: 30px !important;
+          }
+
+          .tour-button {
+            width: 40px;
+            height: 40px;
           }
         }
       `}</style>
