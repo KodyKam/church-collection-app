@@ -199,7 +199,11 @@ export default function TithrTour({
       >
         <div className="tithr-tour-header">
           <div className="tithr-tour-brand">
-            <span className="tithr-tour-brand-mark">T</span>
+            <span className="tithr-tour-brand-mark"><img
+            src="/tithr-logo.png"
+            alt="Tithr Logo"
+            style={{ height: "40px" }}
+          /></span>
             <span>Tithr Guide</span>
           </div>
 
