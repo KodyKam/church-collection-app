@@ -23,7 +23,7 @@ export default function Navbar({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // to ensure clicker outside of menu closes it
+  // Close menu when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -105,161 +105,187 @@ export default function Navbar({
           {church?.name || ""}
         </div>
 
-        {/* RIGHT: Profile / Dropdown */}
+        {/* RIGHT: Tour Button / Profile Menu */}
         <div
           ref={dropdownRef}
           style={{
             display: "flex",
             justifyContent: "flex-end",
+            alignItems: "center",
+            gap: "10px",
             position: "relative",
           }}
         >
-          <div
-            onClick={() => setOpen((prev) => !prev)}
+          {/* TAKE A TOUR BUTTON */}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              onTakeTour?.();
+            }}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.5rem",
-              cursor: "pointer",
+              justifyContent: "center",
+              gap: "6px",
               padding: "10px 14px",
               borderRadius: "8px",
-              border: "1px solid #e5e7eb",
+              border: "1px solid #1e40af",
+              background: "#eff6ff",
+              color: "#1e40af",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
               transition: "background 0.2s",
             }}
             onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "#f9fafb")
+              (e.currentTarget.style.background = "#dbeafe")
             }
             onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "transparent")
+              (e.currentTarget.style.background = "#eff6ff")
             }
+            aria-label="Take a guided tour of Tithr"
           >
-            {church?.logo_url ? (
-              <img
-                src={church.logo_url}
-                alt="logo"
-                style={{
-                  height: "32px",
-                  width: "32px",
-                  objectFit: "cover",
-                  borderRadius: "50%",
-                }}
-              />
-            ) : (
+            <span aria-hidden="true">ⓘ</span>
+            <span className="tour-button-label">App Tour</span>
+          </button>
+
+          {/* PROFILE / DROPDOWN */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setOpen((prev) => !prev)}
+              aria-label="Open navigation menu"
+              aria-expanded={open}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                cursor: "pointer",
+                padding: "10px 14px",
+                borderRadius: "8px",
+                border: "1px solid #e5e7eb",
+                background: "#fff",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "#f9fafb")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.background = "#fff")
+              }
+            >
+              {church?.logo_url ? (
+                <img
+                  src={church.logo_url}
+                  alt="Church logo"
+                  style={{
+                    height: "32px",
+                    width: "32px",
+                    objectFit: "cover",
+                    borderRadius: "50%",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    height: "32px",
+                    width: "32px",
+                    borderRadius: "50%",
+                    background: "#111827",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  {church?.name?.[0] || "C"}
+                </div>
+              )}
+            </button>
+
+            {/* DROPDOWN */}
+            {open && (
               <div
                 style={{
-                  height: "32px",
-                  width: "32px",
-                  borderRadius: "50%",
-                  background: "#111827",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.8rem",
+                  position: "absolute",
+                  right: 0,
+                  top: "120%",
+                  background: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "10px",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+                  width: "180px",
+                  overflow: "hidden",
                 }}
               >
-                {church?.name?.[0] || "C"}
+                {/* DONORS */}
+                <div
+                  onClick={() => {
+                    setOpen(false);
+                    router.push("/donors");
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #f1f5f9",
+                  }}
+                >
+                  Donors
+                </div>
+
+                {/* COLLECTIONS */}
+                <div
+                  onClick={() => {
+                    setOpen(false);
+                    router.push("/collections");
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #f1f5f9",
+                  }}
+                >
+                  Collections
+                </div>
+
+                {/* SETTINGS */}
+                <div
+                  onClick={() => {
+                    setOpen(false);
+                    router.push("/settings");
+                  }}
+                  style={{
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    borderBottom: "1px solid #f1f5f9",
+                  }}
+                >
+                  Settings
+                </div>
+
+                {/* LOGOUT */}
+                <div
+                  onClick={handleLogout}
+                  style={{
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    color: "#ef4444",
+                  }}
+                >
+                  Logout
+                </div>
               </div>
             )}
           </div>
-
-          {/* DROPDOWN */}
-          {open && (
-            <div
-              style={{
-                position: "absolute",
-                right: 0,
-                top: "120%",
-                background: "#fff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "10px",
-                boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-                width: "180px",
-                overflow: "hidden",
-              }}
-            >
-              {/* DONORS */}
-              <div
-                onClick={() => {
-                  setOpen(false);
-                  router.push("/donors");
-                }}
-                style={{
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-              >
-                Donors
-              </div>
-
-              {/* COLLECTIONS */}
-              <div
-                onClick={() => {
-                  setOpen(false);
-                  router.push("/collections");
-                }}
-                style={{
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-              >
-                Collections
-              </div>
-
-              {/* SETTINGS */}
-              <div
-                onClick={() => {
-                  setOpen(false);
-                  router.push("/settings");
-                }}
-                style={{
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-              >
-                Settings
-              </div>
-
-              {/* TAKE A TOUR */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  setOpen(false);
-                  onTakeTour?.();
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    setOpen(false);
-                    onTakeTour?.();
-                  }
-                }}
-                style={{
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  borderBottom: "1px solid #f1f5f9",
-                }}
-              >
-                Take a Tour
-              </div>
-
-              {/* LOGOUT */}
-              <div
-                onClick={handleLogout}
-                style={{
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  color: "#ef4444",
-                }}
-              >
-                Logout
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -272,6 +298,16 @@ export default function Navbar({
           }
 
           .hide-mobile {
+            display: none;
+          }
+
+          .tour-button-label {
+            display: inline;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .tour-button-label {
             display: none;
           }
         }
